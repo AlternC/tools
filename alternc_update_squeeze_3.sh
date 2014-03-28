@@ -101,8 +101,8 @@ cd /etc/init.d/
 
 #Disable Courier
 echo "== Disable pre remove Courrier package (Bug Debian)"
-sed -i '1s/^/!#\/bin\/sh\nexit 0\n/' /var/lib/dpkg/info/courier-imap-ssl.prerm
-sed -i '1s/^/!#\/bin\/sh\nexit 0\n/' /var/lib/dpkg/info/courier-imap.prerm
+sed -i '1s/^/#!\/bin\/sh\nexit 0\n/' /var/lib/dpkg/info/courier-imap-ssl.prerm
+sed -i '1s/^/#!\/bin\/sh\nexit 0\n/' /var/lib/dpkg/info/courier-imap.prerm
 
 echo "OK : Courier is disabled"
 
