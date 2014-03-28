@@ -31,9 +31,36 @@ fi
 #Check alternc Directory
 . /etc/alternc/local.sh
 
-#Check ACL
+#Check ACL package
+if [ -z "`type -f setfacl`" ]; then
+    echo "acl package required"
+    echo "apt-get install acl"
+    exit
+fi
+
+#Check ACL configuration
+aclcheckfile="${ALTERNC_LOC}/test-acl"
+touch $aclcheckfile
+setfacl -m u:root:rwx "$aclcheckfile" 2>/dev/null
+
+if [ "$?" == 1 ]; then
+    rm "$aclcheckfile"
+    echo "ACL is not enabled on ${ALTERNC_LOC}"
+    echo "According to your configuration, add acl or attr2 or user_attr directive on your /etc/fstab"
+    echo "mount / -o remount,acl"
+    exit
+fi
+
+rm "$aclcheckfile"
 
 #Update source.list
+echo "Source List update"
+if [ -f /etc/apt/sources.list.d/alternc.list ]; then
+    mv /etc/apt/sources.list.d/alternc.list /etc/apt/sources.list.d/alternc.list.save
+fi
+echo "deb http://debian.alternc.org/ squeeze main" > /etc/apt/sources.list.d/alternc.list
+wget http://debian.alternc.org/key.txt -O - | apt-key add -
+apt-get update
 
 #Provide a cert to Dovecot
 
