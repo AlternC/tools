@@ -88,7 +88,14 @@ apt-get update >/dev/null
 
 echo "OK : Alternc repository is added and packages list updated"
 
-#Provide a cert to Dovecot
+#Check and restore courier status
+COURIER_STATUS=`dpkg -l courier-imap|grep courier|awk '{print $1}'`
+
+if [[ $COURIER_STATUS == "rF" ]]; then
+    echo "== Courier status error, restore configuration"
+    apt-get install courier-base courier-authlib courier-authdaemon courier-authlib-mysql courier-authlib-userdb courier-imap courier-pop courier-ssl -yq
+    echo "OK : Courier restored"
+fi
 
 #Kill Courier
 echo "== Kill courier service"
