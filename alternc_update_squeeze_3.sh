@@ -113,6 +113,12 @@ sed -i '1s/^/#!\/bin\/sh\nexit 0\n/' /var/lib/dpkg/info/courier-imap.prerm
 
 echo "OK : Courier is disabled"
 
+#Do a awstat generation
+if [ -f /usr/lib/alternc/alternc-awstats ] ; then
+    echo "== Awstats detected"
+    /bin/bash /usr/lib/alternc/alternc-awstats >/dev/null
+    echo 'OK : Statistics awstats updated'
+fi
 
 echo "Perfect : You can execute"
 echo "      apt-get install alternc "
