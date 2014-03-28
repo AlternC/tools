@@ -20,6 +20,13 @@ if [[ ${IS_SQUEEZE} == false ]]; then
 fi
 
 #Check version alternc
+ALTERNC_VERSION="$(dpkg -l alternc|grep alternc|awk '{print $3}')"
+ALTERNC_VERSION_MAJOR=${ALTERNC_VERSION:0:1}
+
+if [ $ALTERNC_VERSION_MAJOR != 1 ]; then
+    echo "Aternc 1.x required"
+    exit;
+fi
 
 #Check alternc Directory
 
