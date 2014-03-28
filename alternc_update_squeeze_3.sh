@@ -19,7 +19,7 @@ if [[ ${IS_SQUEEZE} == false ]]; then
     exit;
 fi
 
-echo "OK : It's squeeze (".${DEBIAN_VERSION}.")"
+echo "OK : It's squeeze ( ${DEBIAN_VERSION} )"
 
 #Check version alternc
 ALTERNC_VERSION="$(dpkg -l alternc|grep alternc|awk '{print $3}')"
@@ -30,15 +30,15 @@ if [ $ALTERNC_VERSION_MAJOR != 1 ]; then
     exit;
 fi
 
-echo "OK : It's alternc (".${ALTERNC_VERSION}.")"
+echo "OK : It's alternc ( ${ALTERNC_VERSION} )"
 
 #Check alternc Directory
 . /etc/alternc/local.sh
 
 #Check ACL package
-if [ -z "`type -f setfacl`" ]; then
+if [ -z "`type -f setfacl 2>/dev/null`" ]; then
     echo "NOK : acl package required"
-    echo "apt-get install acl"
+    echo "      apt-get install acl"
     exit;
 fi
 
@@ -50,8 +50,8 @@ setfacl -m u:root:rwx "$aclcheckfile" 2>/dev/null
 if [ "$?" == 1 ]; then
     rm "$aclcheckfile"
     echo "NOK : ACL is not enabled on ${ALTERNC_LOC}"
-    echo "According to your configuration, add acl or attr2 or user_attr directive on your /etc/fstab"
-    echo "mount / -o remount,acl"
+    echo "      According to your configuration, add acl or attr2 or user_attr directive on your /etc/fstab"
+    echo "      mount / -o remount,acl"
     exit
 fi
 
@@ -64,7 +64,7 @@ SUDO_VERSION="$(dpkg -l sudo|grep sudo|awk '{print $3}')"
 
 if [ -z ${SUDO_VERSION} ]; then
     echo "NOK : sudo is required"
-    echo "apt-get install sudo"
+    echo "      apt-get install sudo"
     exit
 fi
 
@@ -108,4 +108,4 @@ echo "OK : Courier is disabled"
 
 
 echo "Perfect : You can execute"
-echo "apt-get install alternc "
+echo "      apt-get install alternc "
