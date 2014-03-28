@@ -63,6 +63,14 @@ if [ -z ${SUDO_VERSION} ]; then
     exit
 fi
 
+#Check /etc/sudoers.d enable
+grep -Fxq "#includedir /etc/sudoers.d" /etc/sudoers
+if [ "$?" == 1 ]; then
+    echo "#includedir /etc/sudoers.d added in /etc/sudoers"
+    echo "#includedir /etc/sudoers.d" >> /etc/sudoers
+fi
+
+
 #Update source.list
 echo "Source List update"
 if [ -f /etc/apt/sources.list.d/alternc.list ]; then
