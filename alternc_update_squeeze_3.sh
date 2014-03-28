@@ -55,7 +55,7 @@ rm "$aclcheckfile"
 
 
 #Check sudo status/configuration
-SUDO_VERSION="$(dpkg -l alternc|grep sudo|awk '{print $3}')"
+SUDO_VERSION="$(dpkg -l sudo|grep sudo|awk '{print $3}')"
 
 if [ -z ${SUDO_VERSION} ]; then
     echo "Sudo is required"
