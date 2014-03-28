@@ -29,6 +29,7 @@ if [ $ALTERNC_VERSION_MAJOR != 1 ]; then
 fi
 
 #Check alternc Directory
+. /etc/alternc/local.sh
 
 #Check ACL
 
