@@ -65,6 +65,7 @@ apt-get update
 #Provide a cert to Dovecot
 
 #Kill Courier
+echo "Kill courier service"
 cd /etc/init.d/
 ./courier-authdaemon stop
 ./courier-imap stop
