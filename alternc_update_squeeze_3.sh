@@ -80,7 +80,9 @@ echo "OK : Sudo is enabled and compliant with alternc"
 #Update source.list
 echo "== source List update"
 if [ -f /etc/apt/sources.list.d/alternc.list ]; then
-    mv /etc/apt/sources.list.d/alternc.list "/etc/apt/sources.list.d/alternc.list.save".$(date +%s)
+    SOURCE_LIST_BKP="/etc/apt/sources.list.d/alternc.list.save".$(date +%s)
+    mv /etc/apt/sources.list.d/alternc.list $SOURCE_LIST_BKP
+    echo "      Your alternc sources.list has been backuped to $SOURCE_LIST_BKP"
 fi
 echo "deb http://debian.alternc.org/ squeeze main" > /etc/apt/sources.list.d/alternc.list
 wget --quiet http://debian.alternc.org/key.txt -O - | apt-key add - >/dev/null
