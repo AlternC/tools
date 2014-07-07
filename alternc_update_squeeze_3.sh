@@ -122,5 +122,21 @@ if [ -f /usr/lib/alternc/alternc-awstats ] ; then
     echo 'OK : Statistics awstats updated'
 fi
 
+# Checks for cron commands executed by 'www-data' user
+OLDIFS=$IFS
+IFS="
+"
+
+for f in /etc/cron.d/* ; do
+    filelines=$(cat $f);
+	escaped=$(echo $f|tr "/" "\/")
+    for line in $filelines ; do
+echo $line|sed -n -r "s:^[0-9]\S+\s+\S+\s+\S+\s+\S+\s+\S+\s+(www-data).*:#Warning The cron file\
+$escaped will be broken as it tries to execute as www-data which is not compatible with apache mpm\
+itk:p"
+    done
+done
+IFS=$OLDIFS
+
 echo "Perfect : You can execute"
 echo "      apt-get install alternc "
