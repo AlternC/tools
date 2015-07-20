@@ -1,7 +1,7 @@
 #!/usr/bin/php -q
 <?php
 	//Set database name
-	$db_name = "ps";
+	$db_suffix = "ps";
 
 	//Get Alternc User to manage
 	$args = getopt("u:");
@@ -36,6 +36,8 @@
 	//Get user to override
 	$mem->su($uid);
 
+	$db_name =$mem->user['login']."_".$db_suffix;
+
 	//Create database
 	$res = $mysql->add_db($db_name);
 
@@ -43,10 +45,10 @@
 		echo "error in database creation\n";
 		exit(1);
 	}
-	$mysql->grant("ps",$mem->user['login']."_".$db_name);
+	$mysql->grant("ps",$db_name);
 
 	//Get user password
-	$res = $db->query("SELECT password FROM dbusers WHERE name LIKE '".$mem->user['login']."_".$db_name."' AND uid = ".$uid.";");
+	$res = $db->query("SELECT password FROM dbusers WHERE name LIKE '".$db_name."' AND uid = ".$uid.";");
 	$db->next_record();
         $password = $db->f("password");
 
@@ -54,5 +56,5 @@
 	$mem->unsu();
 
 	//Return result
-	echo $db_name." ".$mem->user['login']."_".$db_name." ".$password."\n";
+	echo $db_name." ".$db_name." ".$password."\n";
 	exit(0);
