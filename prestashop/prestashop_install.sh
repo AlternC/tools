@@ -75,6 +75,8 @@ DB_PWD=${DATABASE[2]}
 res=$(/usr/bin/php $ALTERNC_DIR/install/index_cli.php \
 	--domain=$DOMAIN \
 	--newsletter=0 \
+	--language=fr \
+	--email=${ALTERNC_LOGIN}@localhost \
 	--db_server=localhost \
 	--db_name=$DB_NAME \
 	--db_user=$DB_USER \
@@ -89,6 +91,7 @@ mv $ALTERNC_DIR/admin $ALTERNC_DIR/$ADMIN_DIR
 /usr/lib/alternc/fixperms.sh -u $ALTERNC_UID
 
 echo "Website : http://"$DOMAIN \
-	"Admin url : http://"$DOMAIN"/"$ADMIN_DIR \
-	"Account login    : pub@prestashop.com" \
-	"Account password : 0123456789"
+	"\nAdmin url : http://"$DOMAIN"/"$ADMIN_DIR \
+	"\nAccount login    : ${ALTERNC_LOGIN}@localhost" \
+	"\nAccount password : 0123456789" \
+	"\n"
