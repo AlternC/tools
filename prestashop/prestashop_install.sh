@@ -29,8 +29,15 @@ if [ -z "$ALTERNC_LOGIN" ]; then
 	exit 1
 fi
 
+if [ $(grep -o "\." <<< "$DOMAIN" | wc -l) != 2 ]; then
+	echo "Subdomain not set (www, shop, ...)"
+	exit 1
+fi
+
+DOMAIN_SUB=$(echo $DOMAIN |cut -d '.' -f 1)
+
 INITIALE=`echo $ALTERNC_LOGIN |cut -c1`
-ALTERNC_SUBDIR=$(mysql_query 'SELECT valeur FROM sub_domaines WHERE compte="'"$ALTERNC_UID"'" AND sub="www";')
+ALTERNC_SUBDIR=$(mysql_query 'SELECT valeur FROM sub_domaines WHERE compte="'"$ALTERNC_UID"'" AND sub="'"$DOMAIN_SUB"'" AND upper(type)="VHOST" ;')
 
 ALTERNC_DIR="$ALTERNC_LOC/html/$INITIALE/$ALTERNC_LOGIN/$ALTERNC_SUBDIR"
 
