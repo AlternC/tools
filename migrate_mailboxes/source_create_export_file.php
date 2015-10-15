@@ -16,7 +16,6 @@ $service = new Alternc_Tools_Mailbox_Export(array(
 
 // Instanciate command line parser
 $consoleParser = new Console_CommandLine(array(
-    "version" => "0.1",
     "description" => "Exports Alternc mailboxes to a file for export."
 ));
 

@@ -48,15 +48,24 @@ class Alternc_Tools_Mailbox_Export {
         }
         
         // Build query
-        $query = "SELECT CONCAT(a.address,'@',d.domaine) AS email,a.address, d.domaine, a.password, m.path, u.login "
-                . "FROM address a, mailbox m, domaines d, membres u "
-                . "WHERE a.id = m.address_id "
-                . "AND d.id = a.domain_id "
-                . "AND u.uid = d . compte "
-                . "AND a.type != 'mailman'"
+        $query = "SELECT "
+                . " CONCAT(a.address,'@',d.domaine) AS email,"
+                . " a.id, "
+                . " a.address, "
+                . " d.domaine, "
+                . " a.password, "
+                . " m.path, "
+                . " r.recipients, "
+                . " u.login "
+                . "FROM address a "
+                . "JOIN domaines d ON d.id = a.domain_id "
+                . "JOIN membres u ON u.uid = d.compte "
+                . "LEFT JOIN recipient r ON a.id = r.address_id "
+                . "LEFT JOIN mailbox m ON a.id = m.address_id "
+                . "WHERE 1 "
+                . "AND a.type != 'mailman' "
                 . $exclude_query
                 . ";";
-echo( $query );
         
         // Query
         $connection = mysql_query($query);
@@ -66,14 +75,15 @@ echo( $query );
         
         // Build list
         $recordList = array();
-        while ($result = mysql_fetch_assoc($connection)) {
-            $recordList[] = $result;
+        while ($record = mysql_fetch_assoc($connection)) {
+            
+            $recordList[] = $record;
         }
         
         // Exit
         return $recordList;
     }
-
+    
     /**
      * 
      * @param array $options
@@ -82,7 +92,6 @@ echo( $query );
      */
     function getExcludeMailList( $options ){
 
-        var_dump($options);
         if( ! isset($options["exclude_mail"])){
             return false;
         }
