@@ -40,7 +40,7 @@ $consoleParser->addOption("output_file", array(
 try {
     $commandLineResult                  = $consoleParser->parse();
     // Run the service
-    if( ! ($result = $service->run($commandLineResult ))){
+    if( ! ($result = $service->import($commandLineResult ))){
         throw new \Exception("Import process failed");
     }
     

@@ -93,8 +93,8 @@ class Alternc_Tools_Mailbox_Export {
      */
     function getExcludeMailList( $options ){
 
-        if( ! isset($options["exclude_mail"])){
-            return false;
+        if( ! isset($options["exclude_mail"]) ){
+            return array();
         }
         $filename = $options["exclude_mail"];
         if( ! $filename || ! is_file( $filename) || !is_readable($filename)){
