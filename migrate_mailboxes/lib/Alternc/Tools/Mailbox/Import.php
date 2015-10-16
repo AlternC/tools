@@ -233,7 +233,7 @@ class Alternc_Tools_Mailbox_Import {
         $file_content = file_get_contents($filename);
 
         // Decode from JSON
-        $exportList = json_decode($file_content);
+        $exportList = json_decode($file_content, true);
         if (json_last_error()) {
             throw new Exception("JSON encoding failed: " . json_last_error_msg());
         }
@@ -267,7 +267,7 @@ class Alternc_Tools_Mailbox_Import {
         $file_content = file_get_contents($filename);
 
         // Decode from JSON
-        $exportList = json_decode($file_content);
+        $exportList = json_decode($file_content, true);
         if (json_last_error()) {
             throw new Exception("JSON encoding failed: " . json_last_error_msg());
         }
