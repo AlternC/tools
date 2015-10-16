@@ -114,6 +114,7 @@ class Alternc_Tools_Mailbox_Import {
     function checkDomainExists($mailboxData) {
 
         $field = $mailboxData["domaine"];
+        $success = false;
 
         // Build query
         $query = "SELECT domaine "
@@ -136,6 +137,7 @@ class Alternc_Tools_Mailbox_Import {
     function checkLoginExists($mailboxData) {
 
         $field = $mailboxData["login"];
+        $success = false;
 
         // Build query
         $query = "SELECT login "
@@ -158,6 +160,7 @@ class Alternc_Tools_Mailbox_Import {
     function checkMailExists($mailboxData) {
 
         $field = $mailboxData["email"];
+        $success = false;
 
         // Build query
         $query = "SELECT a.id "
@@ -344,7 +347,7 @@ class Alternc_Tools_Mailbox_Import {
             }
         }
 
-        $this->writeRsyncExport($rsyncExport, $commandLineResult->options);
+        $this->writeRsyncExport($rsyncExport, $commandLineResult);
 
         $return["successList"] = $successList;
 
