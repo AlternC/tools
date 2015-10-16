@@ -28,6 +28,13 @@ $consoleParser->addOption("input_file", array(
     "description" => "Input file name and path",
     'default'     => $service->default_input
 ));
+$consoleParser->addOption("output_file", array(
+    "help_name" => "/tmp/out.json",
+    "short_name" => "-o",
+    "long_name" => "--output-file",
+    "description" => "Export file name and path",
+    'default'     => $service->default_output 
+));
 
 // Run the command line parser
 try {
@@ -36,14 +43,28 @@ try {
     if( ! ($result = $service->run($commandLineResult ))){
         throw new \Exception("Import process failed");
     }
-    $msg = $result["message"];
-    $logger->logMessage(Logger\AbstractLogger::INFO,$msg);
-    echo($msg."\n");
     
+    $message = "";
+    $level = Logger\AbstractLogger::INFO;
+    if( count( $result["errors"])){
+        $message .= $result["message"]."\n";
+    }
+    if( count( $result["success"])){
+        $message .= "# Success\n";
+        $message .= implode("\n", $result["success"])."\n";
+    }
+    if( count( $result["errors"])){
+        $level = Logger\AbstractLogger::WARNING;
+        $message .= "# Errors \n";
+        $message .= implode("\n", $result["success"])."\n";
+    }
+    echo($message."\n");
+    $logger->logMessage($level,$message);
+
 // Boom goes your request
 } catch (\Exception $exc) {
-    $msg = $exc->getMessage();
-    $logger->logMessage(Logger\AbstractLogger::CRITICAL,$msg);
-    $consoleParser->displayError($msg);
+    $message = $exc->getMessage();
+    $logger->logMessage(Logger\AbstractLogger::CRITICAL,$message);
+    $consoleParser->displayError($message);
 }
 

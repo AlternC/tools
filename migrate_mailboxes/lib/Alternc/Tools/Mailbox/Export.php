@@ -53,6 +53,7 @@ class Alternc_Tools_Mailbox_Export {
                 . " a.id, "
                 . " a.address, "
                 . " d.domaine, "
+                . " d.id as dom_id, "
                 . " a.password, "
                 . " m.path, "
                 . " r.recipients, "
@@ -135,7 +136,7 @@ class Alternc_Tools_Mailbox_Export {
         }
         
         // Write to output
-        $output_file = $options->output_file ? $options->output_file : $this->default_output;
+        $output_file = $options["output_file"] ? $options["output_file"] : $this->default_output;
         if( !file_put_contents($output_file, $export_content)){
             throw new Exception("Failed to write export $output_file");
         }
