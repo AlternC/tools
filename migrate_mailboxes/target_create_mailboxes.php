@@ -51,12 +51,12 @@ try {
     }
     if( isset( $result["successList"])  &&  count( $result["successList"])){
         $message .= "# Success\n";
-        $message .= implode("\n", $result["success"])."\n";
+        $message .= implode("\n", $result["successList"])."\n";
     }
     if( isset( $result["errorsList"]) && count( $result["errorsList"])){
         $level = Logger\AbstractLogger::WARNING;
         $message .= "# Errors \n";
-        $message .= implode("\n", $result["success"])."\n";
+        $message .= implode("\n", $result["errorsList"])."\n";
     }
     echo($message."\n");
     $logger->logMessage($level,$message);
