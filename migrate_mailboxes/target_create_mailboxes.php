@@ -46,14 +46,14 @@ try {
     
     $message = "";
     $level = Logger\AbstractLogger::INFO;
-    if( count( $result["errors"])){
+    if( isset( $result["message"])){
         $message .= $result["message"]."\n";
     }
-    if( count( $result["success"])){
+    if( isset( $result["successList"])  &&  count( $result["successList"])){
         $message .= "# Success\n";
         $message .= implode("\n", $result["success"])."\n";
     }
-    if( count( $result["errors"])){
+    if( isset( $result["errorsList"]) && count( $result["errorsList"])){
         $level = Logger\AbstractLogger::WARNING;
         $message .= "# Errors \n";
         $message .= implode("\n", $result["success"])."\n";
