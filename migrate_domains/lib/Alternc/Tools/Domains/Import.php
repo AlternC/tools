@@ -5,7 +5,7 @@
  * 
  * Caution, only AlternC > 3.0
  */
-class Alternc_Tools_domain_Import {
+class Alternc_Tools_Domains_Import {
 
     /**
      * AlternC DB adapter

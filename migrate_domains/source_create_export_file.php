@@ -10,13 +10,13 @@ set_include_path( ".:".get_include_path() );
 require_once("bootstrap.php");
 
 // Instanciate export service
-$service = new Alternc_Tools_Mailbox_Export(array(
+$service = new Alternc_Tools_Domains_Export(array(
     "db" => $db
 ));
 
 // Instanciate command line parser
 $consoleParser = new Console_CommandLine(array(
-    "description" => "Exports Alternc mailboxes to a file for export."
+    "description" => "Exports Alternc domains to a file for export."
 ));
 
 // Configure command line parser
@@ -28,11 +28,11 @@ $consoleParser->addOption("output_file", array(
     "description" => "Export file name and path",
     'default'     => $service->default_output 
 ));
-$consoleParser->addOption("exclude_mail", array(
-    "help_name" => "/tmp/mailboxes.txt",
+$consoleParser->addOption("exclude_domain", array(
+    "help_name" => "/tmp/domains.txt",
     "short_name" => "-e",
     "long_name" => "--exclude",
-    "description" => "Path of a file containing mailboxes to exclude"
+    "description" => "Path of a file containing domains to exclude"
 ));
 
 // Run the command line parser

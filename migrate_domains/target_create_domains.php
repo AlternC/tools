@@ -10,13 +10,13 @@ set_include_path( ".:".get_include_path() );
 require_once("bootstrap.php");
 
 // Instanciate export service
-$service = new Alternc_Tools_Mailbox_Import(array(
+$service = new Alternc_Tools_Domains_Import(array(
     "db" => $db
 ));
 
 // Instanciate command line parser
 $consoleParser = new Console_CommandLine(array(
-    "description" => "Imports Alternc mailboxes from a file for import and gets ready for sync."
+    "description" => "Imports Alternc domains from a file for import and gets ready for sync."
 ));
 
 // Configure command line parser
@@ -28,12 +28,12 @@ $consoleParser->addOption("input_file", array(
     "description" => "Input file name and path",
     'default'     => $service->default_input
 ));
-$consoleParser->addOption("output_file", array(
-    "help_name" => "/tmp/out.json",
-    "short_name" => "-o",
-    "long_name" => "--output-file",
-    "description" => "Export file name and path",
-    'default'     => $service->default_output 
+$consoleParser->addOption("force_uid", array(
+    "help_name" => "2001",
+    "short_name" => "-u",
+    "long_name" => "--force-uid",
+    "description" => "Force the domain owner",
+    'default'     => null 
 ));
 
 // Run the command line parser

@@ -5,7 +5,7 @@
  * 
  * Caution, only AlternC > 3.0
  */
-class Alternc_Tools_domain_Export {
+class Alternc_Tools_Domains_Export {
     
     
     /**
@@ -39,32 +39,18 @@ class Alternc_Tools_domain_Export {
      * 
      * @return array
      */
-    function getAdressList ( $options = null ){
+    function getDomainList ( $options = null ){
         
         $exclude_query = "";
-        $excludeMailList = $this->getExcludeMailList( $options );
-        if( count( $excludeMailList )){
-            $exclude_query = "AND CONCAT(a.address,'@',d.domaine) NOT IN ('".implode("','", $excludeMailList)."') ";
+        $excludeDomainList = $this->getExcludeDomainList( $options );
+        if( count( $excludeDomainList )){
+            $exclude_query = "AND d.domaine NOT IN ('".implode("','", $excludeDomainList)."') ";
         }
         
         // Build query
-        $query = "SELECT "
-                . " CONCAT(a.address,'@',d.domaine) AS email,"
-                . " a.id, "
-                . " a.address, "
-                . " d.domaine, "
-                . " d.id as dom_id, "
-                . " a.password, "
-                . " m.path, "
-                . " r.recipients, "
-                . " u.login "
-                . "FROM address a "
-                . "JOIN domaines d ON d.id = a.domain_id "
-                . "JOIN membres u ON u.uid = d.compte "
-                . "LEFT JOIN recipient r ON a.id = r.address_id "
-                . "LEFT JOIN domain m ON a.id = m.address_id "
-                . "WHERE 1 "
-                . "AND a.type != 'mailman' "
+        $query = "SELECT c.login, d.* "
+                . "FROM domaines d "
+                . "JOIN membres c ON d.compte = c.uid "
                 . $exclude_query
                 . ";";
         
@@ -77,8 +63,13 @@ class Alternc_Tools_domain_Export {
         // Build list
         $recordList = array();
         while ($record = mysql_fetch_assoc($connection)) {
-            
-            $recordList[] = $record;
+            $recordList[$record["domaine"]] = $record;
+        }
+        
+        // Fetch subdomains for domain
+        foreach( $recordList as $domain => $domainData ){
+            $domainData["sub_domains"] = $this->getSubdomains( $domain );
+            $recordList[$domain] = $domainData;
         }
         
         // Exit
@@ -87,26 +78,54 @@ class Alternc_Tools_domain_Export {
     
     /**
      * 
+     * @param string $domain
+     * @return array
+     * @throws Exception
+     */
+    public function getSubdomains( $domain ){
+        
+        $query = "SELECT s.* "
+                . "FROM domaines d "
+                . "JOIN sub_domaines s ON s.domaine = d.id "
+                . "WHERE s.domaine = '".$domain."'";
+        // Query
+        $connection = mysql_query($query);
+        if(mysql_errno()){
+            throw new Exception("Mysql request failed. Errno #".  mysql_errno(). ": ".  mysql_error());
+        }
+        
+        // Build list
+        $recordList = array();
+        while ($record = mysql_fetch_assoc($connection)) {
+            $recordList[] = $record;
+        }
+        echo($domain."\n");
+        return $recordList;
+        
+    }
+    
+    /**
+     * 
      * @param array $options
      * @return boolean|array
      * @throws Exception
      */
-    function getExcludeMailList( $options ){
+    function getExcludeDomainList( $options ){
 
-        if( ! isset($options["exclude_mail"]) ){
+        if( ! isset($options["exclude_domain"]) ){
             return array();
         }
-        $filename = $options["exclude_mail"];
+        $filename = $options["exclude_domain"];
         if( ! $filename || ! is_file( $filename) || !is_readable($filename)){
             throw new Exception("Failed to load file $filename");
         }
         $fileContent = file($filename);
         
         foreach ($fileContent as $line) {
-            preg_match_all("/\S*@\S*/", $line, $matches);
+            preg_match_all("/\S+/", $line, $matches);
             if( count($matches)){
-                foreach( $matches as $emailMatches){
-                    $result[] = $emailMatches[0];
+                foreach( $matches as $domainMatches){
+                    $result[] = $domainMatches[0];
                 }
             }
             
@@ -127,7 +146,7 @@ class Alternc_Tools_domain_Export {
         $options = $commandLineResult->options;
         
         // Retrieve addresses list
-        $exportList = $this->getAdressList($options);
+        $exportList = $this->getDomainList($options);
         
         // Encode to JSON
         $export_content = json_encode($exportList);
