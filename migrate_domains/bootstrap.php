@@ -75,6 +75,6 @@ function __autoload($class_name)
 // Create a logger
 $logger = new Logger\FileLogger(array(
     "logDir" => "/tmp",
-    "filenameMask" => "alternc.mailboxes_export.log"
+    "filenameMask" => "alternc.migrate-domains.log"
 ));
 
