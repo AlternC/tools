@@ -28,6 +28,13 @@ $consoleParser->addOption("input_file", array(
     "description" => "Input file name and path",
     'default'     => $service->default_input
 ));
+$consoleParser->addOption("restrict_input_file", array(
+    "help_name" => "/tmp/missing_domains.txt",
+    "short_name" => "-ri",
+    "long_name" => "--restrict-file",
+    "description" => "Domain list, one per line. Others won't be imported.",
+    'default'     => ""
+));
 $consoleParser->addOption("force_uid", array(
     "help_name" => "2001",
     "short_name" => "-u",

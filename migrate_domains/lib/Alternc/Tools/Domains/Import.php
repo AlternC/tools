@@ -16,9 +16,9 @@ class Alternc_Tools_Domains_Import {
     /**
      *
      * Class from alternc project
-     * @var m_mail
+     * @var m_domain
      */
-    protected $mail;
+    protected $domain;
 
     /**
      *
@@ -33,18 +33,6 @@ class Alternc_Tools_Domains_Import {
     var $default_input = "/tmp/alternc.domains_export_out.json";
 
     /**
-     *
-     * @var string
-     */
-    var $default_output = "/tmp/alternc.domains_export_rsync.json";
-
-    /**
-     *
-     * @var string
-     */
-    var $default_rsync_log = "/tmp/alternc.domains_export_rsync.log";
-
-    /**
      * 
      * @param array $options
      * @throws \Exception
@@ -56,53 +44,6 @@ class Alternc_Tools_Domains_Import {
         } else {
             throw new \Exception("Missing parameter db");
         }
-    }
-
-    /**
-     * 
-     * Convenience for retrieving path data from db and array
-     * 
-     * @param int $mail_id
-     * @param array $domainData
-     * @return type
-     * @throws \Exception
-     */
-    function buildRsyncExportSet($mail_id, $domainData) {
-
-        $query = "SELECT "
-                . "m.path "
-                . "FROM address a "
-                . "JOIN domaines d ON d.id = a.domain_id "
-                . "JOIN domain m ON a.id = m.address_id "
-                . "WHERE a.id = '" . addslashes($mail_id) . "'";
-
-        $result = current($this->query($query));
-        // Attempts to retrieve path
-        if (isset($$result["path"]) && $result["path"]) {
-            $new_path = $$result["path"];
-        } else {
-            throw new \Exception("Missing parameter path in new email " . $domainData["email"]);
-        }
-
-        // Attempts to retrieve path
-        if (isset($domainData["path"]) && $domainData["path"]) {
-            $old_path = $domainData["path"];
-        } else {
-            throw new \Exception("Missing parameter path in old email " . $domainData["email"]);
-        }
-
-        // Attempts to retrieve email
-        if (isset($domainData["email"]) && $domainData["email"]) {
-            $email = $domainData["email"];
-        } else {
-            throw new \Exception("Missing parameter email");
-        }
-
-        return array(
-            "new_path" => "$new_path",
-            "old_path" => "$old_path",
-            "email" => "$email"
-        );
     }
 
     /**
@@ -151,70 +92,34 @@ class Alternc_Tools_Domains_Import {
         return $success;
     }
 
-    /**
-     * Checks if mail already in DB. 
-     * 
-     * @param array $domainData
-     * @return boolean
-     */
-    function checkMailExists($domainData) {
-
-        $field = $domainData["email"];
-        $success = false;
-
-        // Build query
-        $query = "SELECT a.id "
-                . "FROM address a "
-                . "JOIN domaines d ON d.id = a.domain_id "
-                . "WHERE CONCAT(a.address,'@',d.domaine) = '" . addslashes($field) . "'";
-
-        // No record ? Exit
-        if (count($this->query($query))) {
-            $success = true;
-        }
-        return $success;
-    }
 
     /**
      * Creates the domain
      * 
-     * Used the mail_add.php script by Antoine Beaupré for details. 
+     * Used the domain_add.php script by Antoine Beaupré for details. 
      * Snarky comments tend to be the most useful ones around here.
      * 
      * @global type $err
      * @param type $domainData
-     * @return int mail_id
+     * @param Console_CommandLine_Result $commandLineResult
+     * @return int domain_id
      * @throws Exception
      */
-    function createMail($domainData) {
+    function createDomain($domainData, $commandLineResult) {
 
         global $err;
 
-        $email = $domainData["email"];
+        // Retrieves command line options 
+        $options = $commandLineResult->options;
+        
+        // Retrieve domain
+        $domain = $domainData["domaine"];
+        
+        // Retrieve forced uid if exists
+        
+        
 
-        // Will create a real domain if path exists
-        $path = $domainData["path"];
-
-        // Will add recipients if recipients provided
-        $recipients = $domainData["recipients"];
-
-        // Create the mail
-        $mail_id = $this->mail->create($domainData["dom_id"], $domainData["address"]);
-        if (!$mail_id) {
-            throw new Exception("Failed to create domain for $email : " . $err->errstr());
-        }
-
-        // Set password
-        if (!$this->mail->set_passwd($mail_id, $domainData["password"])) {
-            throw new Exception("Failed to set password for $email : " . $err->errstr());
-        }
-
-        // Set details 
-        if (!$this->mail->set_details($mail_id, ($path ? true : false), $this->default_quota, $recipients)) {
-            throw new Exception("failed to set details for $email : " . $err->errstr());
-        }
-
-        return array("code" => 0, "message" => "ok", "mail_id" => $mail_id);
+        return array("code" => 0, "message" => "ok", "domain_id" => $domain_id);
     }
 
     /**
@@ -224,40 +129,6 @@ class Alternc_Tools_Domains_Import {
      * @throws Exception
      */
     function getExportData($options) {
-
-        // Read from input file
-        if (!isset($options["input_file"])) {
-            throw new Exception("Missing input file");
-        }
-        $filename = $options["input_file"];
-        if (!$filename || !is_file($filename) || !is_readable($filename)) {
-            throw new Exception("Failed to load file $filename");
-        }
-        $file_content = file_get_contents($filename);
-
-        // Decode from JSON
-        $exportList = json_decode($file_content, true);
-        if (json_last_error()) {
-            throw new Exception("JSON encoding failed: " . json_last_error_msg());
-        }
-
-        // Exit
-        return $exportList;
-    }
-
-    /**
-     * Reads from JSON file with Rsync Data
-     * 
-     * Really, a copy of this->getExportData, but provided for code legitibility
-     * 
-     * @param Console_CommandLine_Result $commandLineResult
-     * @return array
-     * @throws Exception
-     */
-    function getRsyncExport($commandLineResult) {
-
-        // Retrieves command line options 
-        $options = $commandLineResult->options;
 
         // Read from input file
         if (!isset($options["input_file"])) {
@@ -291,6 +162,7 @@ class Alternc_Tools_Domains_Import {
 
         // Retrieves command line options 
         $options = $commandLineResult->options;
+        $force_uid = (int) $options["force_uid"];
 
         // Retrieve export data
         $exportList = $this->getExportData($options);
@@ -302,44 +174,39 @@ class Alternc_Tools_Domains_Import {
         // Loop through domains
         foreach ($exportList as $domainData) {
 
-            $email = $domainData["email"];
+            $domain = $domainData["domain"];
             try {
 
                 // Login not exists : error
-                if (!$this->checkLoginExists($domainData)) {
-                    throw new Exception("Login does not exist: " . $domainData["login"] . " for $email ");
+                if (!$this->checkLoginExists($domainData)  && ! is_null($force_uid) ) {
+                    throw new Exception("Login does not exist: " . $domainData["login"] . " for $domain ");
                 }
 
                 // Domain not exists : error 
                 if (!$this->checkDomainExists($domainData)) {
-                    throw new Exception("Domain does not exist: " . $domainData["domain"] . " for $email ");
+                    throw new Exception("Domain does not exist: " . $domainData["domain"] . " for $domain ");
                 }
 
-                // Mail not exists : error
-                if ($this->checkMailExists($domainData)) {
-                    throw new Exception("Address $email already exists.");
-                }
-
-                // Create mail
-                $creationResult = $this->createMail($domainData);
+                // Create domain
+                $creationResult = $this->createDomain($domainData, $options );
 
                 // Failed to create? 
                 if (!isset($creationResult["code"]) || $creationResult["code"] != 0) {
-                    throw new Exception("Email creation error: " . $creationResult["message"] . " for $email ");
+                    throw new Exception("Edomain creation error: " . $creationResult["message"] . " for $domain ");
                 }
 
-                // Attempts to retrieve mail_id
-                if (isset($creationResult["mail_id"]) && $creationResult["mail_id"]) {
-                    $mail_id = $creationResult["mail_id"];
+                // Attempts to retrieve domain_id
+                if (isset($creationResult["domain_id"]) && $creationResult["domain_id"]) {
+                    $domain_id = $creationResult["domain_id"];
                 } else {
-                    throw new Exception("Missing parameter mail_id");
+                    throw new Exception("Missing parameter domain_id");
                 }
 
                 // Add to export for rsync
-                $rsyncExport[] = $this->buildRsyncExportSet($mail_id, $domainData);
+                $rsyncExport[] = $this->buildRsyncExportSet($domain_id, $domainData);
 
                 // Record success
-                $successList[] = $email;
+                $successList[] = $domain;
 
                 // Record errors
             } catch (\Exception $e) {
@@ -430,17 +297,17 @@ class Alternc_Tools_Domains_Import {
 
             try {
 
-                // Attempts to retrieve email
-                if (isset($set["email"]) && $set["email"]) {
-                    $email = $set["email"];
+                // Attempts to retrieve domain
+                if (isset($set["domain"]) && $set["domain"]) {
+                    $domain = $set["domain"];
                 } else {
-                    throw new \Exception("Missing parameter email for $email");
+                    throw new \Exception("Missing parameter domain for $domain");
                 }
                 // Attempts to retrieve new_path
                 if (isset($set["new_path"]) && $set["new_path"]) {
                     $new_path = $set["new_path"];
                 } else {
-                    throw new Exception("Missing parameter new_path for $email");
+                    throw new Exception("Missing parameter new_path for $domain");
                 }
                 // Attempts to retrieve old_path
                 if (isset($set["old_path"]) && $set["old_path"]) {
@@ -457,7 +324,7 @@ class Alternc_Tools_Domains_Import {
                 $output = array();
                 exec( $command, $output, $code);
                 if( $code != 0 ){
-                    throw new Exception("Rsync failed for $email : code#${code}, output : ".  json_encode($output));
+                    throw new Exception("Rsync failed for $domain : code#${code}, output : ".  json_encode($output));
                 }
                 
             } catch (Exception $exc) {
