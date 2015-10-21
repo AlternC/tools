@@ -56,6 +56,10 @@ class Alternc_Tools_Mailbox_Import {
         } else {
             throw new \Exception("Missing parameter db");
         }
+
+
+	$this->mail = new m_mail();
+
     }
 
     /**
@@ -78,10 +82,10 @@ class Alternc_Tools_Mailbox_Import {
 
         $result = current($this->query($query));
         // Attempts to retrieve path
-        if (isset($$result["path"]) && $result["path"]) {
-            $new_path = $$result["path"];
+        if (isset($result["path"]) && $result["path"]) {
+            $new_path = $result["path"];
         } else {
-            throw new \Exception("Missing parameter path in new email " . $mailboxData["email"]);
+           return array(); 
         }
 
         // Attempts to retrieve path
@@ -136,16 +140,22 @@ class Alternc_Tools_Mailbox_Import {
      */
     function checkLoginExists($mailboxData) {
 
+	global $cuid;
+	global $get_quota_cache;
         $field = $mailboxData["login"];
         $success = false;
-
+	
         // Build query
-        $query = "SELECT login "
+        $query = "SELECT uid "
                 . "FROM membres u "
                 . "WHERE u.login = '" . addslashes($field) . "'";
 
+
         // No record ? Exit
-        if (count($this->query($query))) {
+        $result = $this->query($query);
+	if (count( $result )) {
+	    $cuid = $result[0]["uid"];
+	    $get_quota_cache[$cuid]["mail"] = array( "u" => 0, "t" => 1);
             $success = true;
         }
         return $success;
@@ -199,13 +209,14 @@ class Alternc_Tools_Mailbox_Import {
         $recipients = $mailboxData["recipients"];
 
         // Create the mail
-        $mail_id = $this->mail->create($mailboxData["dom_id"], $mailboxData["address"]);
+        $mail_id = $this->mail->create($mailboxData["dom_id"], $mailboxData["address"], "", true);
         if (!$mail_id) {
             throw new Exception("Failed to create mailbox for $email : " . $err->errstr());
         }
 
         // Set password
-        if (!$this->mail->set_passwd($mail_id, $mailboxData["password"])) {
+	$password = $mailboxData["password"];
+        if ( $password && ! $this->mail->set_passwd($mail_id, $password)) {
             throw new Exception("Failed to set password for $email : " . $err->errstr());
         }
 
@@ -304,7 +315,6 @@ class Alternc_Tools_Mailbox_Import {
 
             $email = $mailboxData["email"];
             try {
-
                 // Login not exists : error
                 if (!$this->checkLoginExists($mailboxData)) {
                     throw new Exception("Login does not exist: " . $mailboxData["login"] . " for $email ");
