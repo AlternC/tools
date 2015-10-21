@@ -30,7 +30,7 @@ $consoleParser->addOption("input_file", array(
 ));
 $consoleParser->addOption("restrict_input_file", array(
     "help_name" => "/tmp/missing_domains.txt",
-    "short_name" => "-ri",
+    "short_name" => "-r",
     "long_name" => "--restrict-file",
     "description" => "Domain list, one per line. Others won't be imported.",
     'default'     => ""
