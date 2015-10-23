@@ -13,9 +13,9 @@ if [ -z $3 ] ; then echo "Missing parameter #3"; usage; fi;
 domain=$1
 uid=$2
 web_dir=$3
-old_id=2001
+old_id=
 old_id_suffix=1
-user=
+user=root
 password=
 
 echo "Moving the old apache directory"
@@ -66,7 +66,7 @@ for mailbox in $mailboxList ; do
     if [ ! -d $mailbox ]; then 
 	echo "$mailbox is not a valid folder. exiting;"
     else 
-	echo "changing owner of $mailbox"
+	echi "changing owner of $mailbox"
 	chown -R $uid $mailbox
     fi;
 done;
