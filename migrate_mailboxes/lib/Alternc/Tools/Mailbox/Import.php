@@ -239,7 +239,8 @@ class Alternc_Tools_Mailbox_Import {
 
         // Set password
 	$password = $mailboxData["password"];
-        if ( $password && ! $this->query("UPDATE address SET password='$password' where address='$address' and domain_id=$domain_id")) {
+        $passQueryResult = $this->query("UPDATE address SET password='$password' where address='$address' and domain_id=$domain_id");
+        if ( ! $password && ! count( $passQueryResult)) {
             throw new Exception("Failed to set password for $email : " . $err->errstr());
         }
         
