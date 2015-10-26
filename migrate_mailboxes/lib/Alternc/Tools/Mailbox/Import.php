@@ -201,6 +201,10 @@ class Alternc_Tools_Mailbox_Import {
         global $err;
 
         $email = $mailboxData["email"];
+        
+        // Will create a catchall if the left part of the email is null
+        preg_match("/(.*)@(.*)",$email,$matches);
+        
 
         // Will create a real mailbox if path exists
         $path = $mailboxData["path"];
@@ -410,10 +414,10 @@ class Alternc_Tools_Mailbox_Import {
         $options = $commandLineResult->options;
         
         // Attempts to retrieve log_file
-        if (isset($options["log_file"]) && $options["log_file"]) {
-            $log_file = $options["log_file"];
+        if (isset($options["rsync_log"]) && $options["rsync_log"]) {
+            $log_file = $options["rsync_log"];
         } else {
-            throw new \Exception("Missing parameter log_file");
+            throw new \Exception("Missing parameter rsync_log");
         }
         
         // Retrieve arguments
@@ -427,14 +431,14 @@ class Alternc_Tools_Mailbox_Import {
         }
 
         // Attempts to retrieve target
-        if (isset($options["target"]) && $argumentsList["target"]) {
-            $target = $options["target"];
+        if (isset($argumentsList["target"]) && $argumentsList["target"]) {
+            $target = $argumentsList["target"];
         } else {
             throw new \Exception("Missing parameter target");
         }
 
         // Loop through [new,old] sets
-        foreach ($exportData as $set) {
+        foreach ($exportList as $set) {
 
             $errorList = array();
 
@@ -459,8 +463,20 @@ class Alternc_Tools_Mailbox_Import {
                     throw new \Exception("Missing parameter old_path");
                 }
 
+                $localArray = array("local","localhost","here","127.0.0.1");
+                if( in_array( $source, $localArray)){
+                    $src =  escapeshellarg("$old_path");
+                }else{
+                    $src =  escapeshellarg("$source:$old_path");
+                }
+                if( in_array( $target, $localArray)){
+                    $dest =  escapeshellarg("$new_path");
+                }else{
+                    $dest =  escapeshellarg("$target:$new_path");
+                }
+                
                 // Build the RSYNC command, note we don't keep owner and group
-                $command = "rsync -rlpt " . escapeshellarg("$source:$old_path") . " " . escapeshellarg("$target:$new_path >> ".  escapeshellarg($log_file));
+                $command = "rsync -rlpt $src $dest >> ".  escapeshellarg($log_file);
                 
                 // Run the Rsync command
                 $code = 1;
