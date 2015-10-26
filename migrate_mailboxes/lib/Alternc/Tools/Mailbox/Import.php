@@ -113,23 +113,25 @@ class Alternc_Tools_Mailbox_Import {
      * Checks if domain already in DB. 
      * 
      * @param array $mailboxData
-     * @return boolean
+     * @return integer
      */
     function checkDomainExists($mailboxData) {
 
         $field = $mailboxData["domaine"];
-        $success = false;
+        $domain_id = 0;
 
         // Build query
-        $query = "SELECT domaine "
+        $query = "SELECT id "
                 . "FROM domaines d "
                 . "WHERE d.domaine = '" . addslashes($field) . "'";
 
         // No record ? Exit
-        if (count($this->query($query))) {
-            $success = true;
+        $result = $this->query($query);
+        if (count($result)) {
+            $record = current( $result );
+            $domain_id = $record["id"];
         }
-        return $success;
+        return $domain_id;
     }
 
     /**
@@ -196,22 +198,33 @@ class Alternc_Tools_Mailbox_Import {
      * @return int mail_id
      * @throws Exception
      */
-    function createMail($mailboxData) {
+    function createMail($mailboxData, $domain_id ) {
 
         global $err;
 
         $email = $mailboxData["email"];
         
-        // Will create a catchall if the left part of the email is null
-        preg_match("/(.*)@(.*)",$email,$matches);
-        
-
         // Will create a real mailbox if path exists
         $path = $mailboxData["path"];
 
         // Will add recipients if recipients provided
         $recipients = $mailboxData["recipients"];
 
+        // Will ONLY create a catchall if the left part of the email is null
+        preg_match("/(.*)@(.*)/",$email,$matches);
+        if( count($matches) && isset($matches[1]) && $matches[1] == ""){
+            
+            // Alternc Catchall means single recipient
+            if( ! $recipients || ! count( $recipients ) == 1 ){
+                throw new Exception("Failed to create catchall for $email : single alias expected, '$recipients' found");
+            }
+            $target = current( $recipients );
+            $result = $this->mail->catchall_set($domain_id, $target);
+            if( ! $result ){
+                throw new Exception("Failed to create catchall for $email : " . $err->errstr());
+            }
+        }
+        
         // Create the mail
         $mail_id = $this->mail->create($mailboxData["dom_id"], $mailboxData["address"], "", true);
         if (!$mail_id) {
@@ -325,7 +338,7 @@ class Alternc_Tools_Mailbox_Import {
                 }
 
                 // Domain not exists : error 
-                if (!$this->checkDomainExists($mailboxData)) {
+                if (!( $domain_id = $this->checkDomainExists($mailboxData ) )) {
                     throw new Exception("Domain does not exist: " . $mailboxData["domain"] . " for $email ");
                 }
 
@@ -335,7 +348,7 @@ class Alternc_Tools_Mailbox_Import {
                 }
 
                 // Create mail
-                $creationResult = $this->createMail($mailboxData);
+                $creationResult = $this->createMail($mailboxData, $domain_id);
 
                 // Failed to create? 
                 if (!isset($creationResult["code"]) || $creationResult["code"] != 0) {
