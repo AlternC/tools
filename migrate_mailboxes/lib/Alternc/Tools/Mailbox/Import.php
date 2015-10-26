@@ -219,10 +219,8 @@ class Alternc_Tools_Mailbox_Import {
                 throw new Exception("Failed to create catchall for $email : single alias expected, '$recipients' found");
             }
             $target = current(explode("\n", preg_replace('/[\r\t\s]/', "\n", $recipients)));
-            $result = $this->mail->catchall_set($domain_id, $target);
-            if (!$result) {
-                throw new Exception("Failed to create catchall for $email : " . $err->errstr());
-            }
+            $this->mail->catchall_set($domain_id, $target);
+            return array("code" => 0, "message" => "ok");
         }
 
         // Create the mail
@@ -360,19 +358,17 @@ class Alternc_Tools_Mailbox_Import {
                 if (!isset($creationResult["code"]) || $creationResult["code"] != 0) {
                     throw new Exception("Email creation error: " . $creationResult["message"] . " for $email ");
                 }
-
-                // Attempts to retrieve mail_id
-                if (isset($creationResult["mail_id"]) && $creationResult["mail_id"]) {
-                    $mail_id = $creationResult["mail_id"];
-                } else {
-                    throw new Exception("Missing parameter mail_id");
-                }
-
-                // Add to export for rsync
-                $rsyncExport[] = $this->buildRsyncExportSet($mail_id, $mailboxData);
-
+                
                 // Record success
                 $successList[] = $email;
+
+                // Attempts to retrieve mail_id for rsync
+                if (isset($creationResult["mail_id"]) && $creationResult["mail_id"]) {
+                    $mail_id = $creationResult["mail_id"];
+                    // Add to export for rsync
+                    $rsyncExport[] = $this->buildRsyncExportSet($mail_id, $mailboxData);
+                } 
+
 
                 // Record errors
             } catch (\Exception $e) {
