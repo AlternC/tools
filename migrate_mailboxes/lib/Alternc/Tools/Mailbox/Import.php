@@ -242,13 +242,10 @@ class Alternc_Tools_Mailbox_Import {
         }
 
         // Set password
-        $password = $mailboxData["password"];
-        if ($password) {
+        if ($mailboxData["password"] ) {
+            $password = $mailboxData["password"];
             $query = "UPDATE address SET `password`='$password' where address='$address' and domain_id=$domain_id";
-            $passQueryResult = $this->query($query);
-            if (!count($passQueryResult)) {
-                throw new Exception("Failed to set password for $email : " . $err->errstr());
-            }
+            $this->query($query);
         }
 
         return array("code" => 0, "message" => "ok", "mail_id" => $mail_id);
@@ -410,9 +407,11 @@ class Alternc_Tools_Mailbox_Import {
         if (mysql_errno()) {
             throw new Exception("Mysql request failed. Errno #" . mysql_errno() . ": " . mysql_error());
         }
-
-        // Build list
         $recordList = array();
+        if( ! $connection ){
+            return $recordList;
+        }
+        // Build list
         while ($result = mysql_fetch_assoc($connection)) {
             $recordList[] = $result;
         }
