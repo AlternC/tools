@@ -466,13 +466,24 @@ class Alternc_Tools_Mailbox_Import {
                 $localArray = array("local","localhost","here","127.0.0.1");
                 if( in_array( $source, $localArray)){
                     $src =  escapeshellarg("$old_path");
+                    $directory = $old_path;
                 }else{
                     $src =  escapeshellarg("$source:$old_path");
                 }
                 if( in_array( $target, $localArray)){
                     $dest =  escapeshellarg("$new_path");
+                    $directory = $new_path;
                 }else{
                     $dest =  escapeshellarg("$target:$new_path");
+                }
+                
+                // Check if mailbox dir exists
+                if( !is_dir($directory) && !mkdir($directory, 0770, true)){
+                    throw new Exception("Rsync failed for $email: Missing directory $directory");
+                }
+                // Check if mailbox dir is writabla
+                if( !is_writeable($directory)){
+                    throw new Exception("Rsync failed for $email: Cannot write in directory $directory");
                 }
                 
                 // Build the RSYNC command, note we don't keep owner and group
