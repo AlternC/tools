@@ -242,6 +242,11 @@ class Alternc_Tools_Mailbox_Import {
         if ( $password && ! $this->query("UPDATE address SET password='$password' where address='$address' and domain_id=$domain_id")) {
             throw new Exception("Failed to set password for $email : " . $err->errstr());
         }
+        
+        if( $path && ! is_dir( $path ) && ! mkdir( $path, 0770, true)){
+            throw new Exception("Failed to create mailbox for $email in $path ");
+        }
+        
         return array("code" => 0, "message" => "ok", "mail_id" => $mail_id);
     }
 
