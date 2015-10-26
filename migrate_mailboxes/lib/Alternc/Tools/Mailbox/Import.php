@@ -215,10 +215,10 @@ class Alternc_Tools_Mailbox_Import {
         if( count($matches) && isset($matches[1]) && $matches[1] == ""){
             
             // Alternc Catchall means single recipient
-            if( ! $recipients || ! count( $recipients ) == 1 ){
+            if( ! $recipients ){
                 throw new Exception("Failed to create catchall for $email : single alias expected, '$recipients' found");
             }
-            $target = current( $recipients );
+            $target = current( explode( "\n", $recipients) );
             $result = $this->mail->catchall_set($domain_id, $target);
             if( ! $result ){
                 throw new Exception("Failed to create catchall for $email : " . $err->errstr());
