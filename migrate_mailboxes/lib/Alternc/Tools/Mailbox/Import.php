@@ -202,6 +202,7 @@ class Alternc_Tools_Mailbox_Import {
 
         global $err;
 
+        $address = $mailboxData["address"];
         $email = $mailboxData["email"];
         
         // Will create a real mailbox if path exists
@@ -218,7 +219,7 @@ class Alternc_Tools_Mailbox_Import {
             if( ! $recipients ){
                 throw new Exception("Failed to create catchall for $email : single alias expected, '$recipients' found");
             }
-            $target = current( explode( "\n", $recipients) );
+            $target = current( explode( "\n", preg_replace('/[\r\t\s]/', "\n", $recipients)) );
             $result = $this->mail->catchall_set($domain_id, $target);
             if( ! $result ){
                 throw new Exception("Failed to create catchall for $email : " . $err->errstr());
@@ -226,15 +227,9 @@ class Alternc_Tools_Mailbox_Import {
         }
         
         // Create the mail
-        $mail_id = $this->mail->create($mailboxData["dom_id"], $mailboxData["address"], "", true);
+        $mail_id = $this->mail->create($domain_id, $address, "", true);
         if (!$mail_id) {
             throw new Exception("Failed to create mailbox for $email : " . $err->errstr());
-        }
-
-        // Set password
-	$password = $mailboxData["password"];
-        if ( $password && ! $this->mail->set_passwd($mail_id, $password)) {
-            throw new Exception("Failed to set password for $email : " . $err->errstr());
         }
 
         // Set details 
@@ -242,6 +237,11 @@ class Alternc_Tools_Mailbox_Import {
             throw new Exception("failed to set details for $email : " . $err->errstr());
         }
 
+        // Set password
+	$password = $mailboxData["password"];
+        if ( $password && ! $this->query("UPDATE address SET password='$password' where address='$address' and domain_id=$domain_id")) {
+            throw new Exception("Failed to set password for $email : " . $err->errstr());
+        }
         return array("code" => 0, "message" => "ok", "mail_id" => $mail_id);
     }
 
