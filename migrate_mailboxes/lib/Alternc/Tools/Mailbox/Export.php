@@ -77,8 +77,7 @@ class Alternc_Tools_Mailbox_Export {
         // Build list
         $recordList = array();
         while ($record = mysql_fetch_assoc($connection)) {
-            
-            $recordList[] = $record;
+            $recordList[$record["email"]] = $record;
         }
         
         // Exit
@@ -114,7 +113,64 @@ class Alternc_Tools_Mailbox_Export {
         return $result;
         
     }
-    
+   
+    function fixDb( $commandLineResult ){
+
+        // Retrieve addresses list
+	$exportList = $this->getAdressList($options);
+
+	// Build query
+	$query = '
+	    SELECT a1.id as parent, a2.id as child
+	    FROM address a1  
+	    JOIN address a2 
+	    ON a1.domain_id = a2.domain_id 
+	    AND a1.id != a2.id 
+	    AND a2.address LIKE (concat(a1.address,"-%"))
+	    AND a1.type != "mailman" 
+	    AND a2.type != "mailman"
+	    AND a1.`password` = ""
+	    AND a2.`password` = ""
+	    ';
+
+	// Query
+	$connection = mysql_query($query);
+	if(mysql_errno()){
+	throw new Exception("Mysql request failed. Errno #".  mysql_errno(). ": ".  mysql_error());
+	}
+
+	// Build list
+	$updateIdList = array();
+	while ($record = mysql_fetch_assoc($connection)) {
+	    $parent = $record["parent"];
+	    $child = $record["child"];
+	    if( ! in_array( $parent, $updateIdList) ){
+	    $updateIdList[] = $parent;
+	    }
+	    if( ! in_array( $child, $updateIdList ) ){
+	    $updateIdList[] = $child;
+	    }
+	}
+	if( !count( $updateIdList ) ){
+
+	    return array("code" => 0, "message" => "Nothing to do");
+	}
+	$query_update = "UPDATE address 
+	    SET type = 'mailman'
+	    WHERE id in (".implode(",",$updateIdList).")";
+
+	$connection = mysql_query($query_update);
+	if(mysql_errno()){
+	throw new Exception("Mysql request failed. Errno #".  mysql_errno(). ": ".  mysql_error());
+	}
+	// Exit
+        return array("code" => 0, "message" => "Changed type for address list: ".implode(",",$updateIdList));
+	
+
+
+    }
+
+
     /**
      * 
      * @param Console_CommandLine_Result $commandLineResult
