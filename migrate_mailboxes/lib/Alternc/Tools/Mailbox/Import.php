@@ -137,7 +137,7 @@ class Alternc_Tools_Mailbox_Import {
      * Checks if login already in DB. 
      * 
      * @param array $mailboxData
-     * @return boolean
+     * @return boolean|integer
      */
     function checkLoginExists($mailboxData) {
 
@@ -159,7 +159,7 @@ class Alternc_Tools_Mailbox_Import {
             $get_quota_cache[$cuid]["mail"] = array("u" => 0, "t" => 1);
             $success = true;
         }
-        return $success;
+        return $cuid;
     }
 
     /**
@@ -323,6 +323,13 @@ class Alternc_Tools_Mailbox_Import {
 
         // Retrieves command line options 
         $options = $commandLineResult->options;
+        
+        // Attempts to retrieve ignore_login
+        if (isset($options["ignore_login"]) && $options["ignore_login"]) {
+            $ignore_login = true;
+        } else {
+            $ignore_login = false;
+        }
 
         // Retrieve export data
         $exportList = $this->getExportData($options);
@@ -337,12 +344,12 @@ class Alternc_Tools_Mailbox_Import {
             $email = $mailboxData["email"];
             try {
                 // Login not exists : error
-                if (!$this->checkLoginExists($mailboxData)) {
+                if ( ! $ignore_login && ! $this->checkLoginExists($mailboxData) ) {
                     throw new Exception("Login does not exist: " . $mailboxData["login"] . " for $email ");
                 }
 
                 // Domain not exists : error 
-                if (!( $domain_id = $this->checkDomainExists($mailboxData) )) {
+                if ( !( $domain_id = $this->checkDomainExists($mailboxData) )) {
                     throw new Exception("Domain does not exist: " . $mailboxData["domain"] . " for $email ");
                 }
 
@@ -351,6 +358,7 @@ class Alternc_Tools_Mailbox_Import {
                     throw new Exception("Address $email already exists.");
                 }
 
+                
                 // Create mail
                 $creationResult = $this->createMail($mailboxData, $domain_id);
 

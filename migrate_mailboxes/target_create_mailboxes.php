@@ -21,6 +21,13 @@ $consoleParser = new Console_CommandLine(array(
 
 // Configure command line parser
 $consoleParser->add_version_option = false;
+$consoleParser->addOption("ignore_login", array(
+    "help_name" => "true",
+    "long_name" => "--ignore-login",
+    "description" => "Ignore the email's source AlternC login and use the new domain owner",
+    'default'     => false
+));
+
 $consoleParser->addOption("input_file", array(
     "help_name" => "/tmp/out.json",
     "short_name" => "-i",
