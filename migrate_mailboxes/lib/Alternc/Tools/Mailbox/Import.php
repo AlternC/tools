@@ -116,11 +116,12 @@ class Alternc_Tools_Mailbox_Import {
      */
     function checkDomainExists($mailboxData) {
 
+      global $cuid;
         $field = $mailboxData["domaine"];
         $domain_id = 0;
 
         // Build query
-        $query = "SELECT id "
+        $query = "SELECT id,compte "
                 . "FROM domaines d "
                 . "WHERE d.domaine = '" . addslashes($field) . "'";
 
@@ -129,7 +130,9 @@ class Alternc_Tools_Mailbox_Import {
         if (count($result)) {
             $record = current($result);
             $domain_id = $record["id"];
+	    $cuid=$record["compte"];
         }
+
         return $domain_id;
     }
 
@@ -323,7 +326,7 @@ class Alternc_Tools_Mailbox_Import {
 
         // Retrieves command line options 
         $options = $commandLineResult->options;
-        
+
         // Attempts to retrieve ignore_login
         if (isset($options["ignore_login"]) && $options["ignore_login"]) {
             $ignore_login = true;
@@ -358,7 +361,6 @@ class Alternc_Tools_Mailbox_Import {
                     throw new Exception("Address $email already exists.");
                 }
 
-                
                 // Create mail
                 $creationResult = $this->createMail($mailboxData, $domain_id);
 
@@ -412,7 +414,7 @@ class Alternc_Tools_Mailbox_Import {
             throw new Exception("Mysql request failed. Errno #" . mysql_errno() . ": " . mysql_error());
         }
         $recordList = array();
-        if( ! $connection ){
+        if( ! is_resource($connection) ){
             return $recordList;
         }
         // Build list
