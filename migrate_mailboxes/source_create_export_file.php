@@ -21,6 +21,12 @@ $consoleParser = new Console_CommandLine(array(
 
 // Configure command line parser
 $consoleParser->add_version_option = false;
+$consoleParser->addOption("help", array(
+    //"help_name" => "/tmp/domain.txt",
+    "short_name" => "-h",
+    "long_name" => "--help",
+    "description" => "Show the options for this script"
+));
 $consoleParser->addOption("output_file", array(
     "help_name" => "/tmp/out.json",
     "short_name" => "-o",
@@ -34,6 +40,13 @@ $consoleParser->addOption("exclude_mail", array(
     "long_name" => "--exclude",
     "description" => "Path of a file containing mailboxes to exclude"
 ));
+$consoleParser->addOption("domain_select", array(
+    "help_name" => "/tmp/domain.txt",
+    "short_name" => "-d",
+    "long_name" => "--domain",
+    "description" => "Select one domain to export (ex. alternc.com)"
+));
+
 
 // Run the command line parser
 try {
