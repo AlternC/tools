@@ -16,7 +16,7 @@ Exporting / Importing AlternC account is a common request amongst users. We chos
 
 ## Installation
 
-git clone https://github.com/AlternC/tools-alternc.gi
+git clone https://github.com/AlternC/alternc-tools.git
 
 
 ## API Reference
