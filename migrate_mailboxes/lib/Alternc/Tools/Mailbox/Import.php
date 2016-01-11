@@ -114,14 +114,14 @@ class Alternc_Tools_Mailbox_Import {
      * @param array $mailboxData
      * @return integer
      */
-    function checkDomainExists($mailboxData) {
+    function checkDomainExists($mailboxData, $assign_cuid = false ) {
 
       global $cuid;
         $field = $mailboxData["domaine"];
         $domain_id = 0;
 
         // Build query
-        $query = "SELECT id,compte "
+        $query = "SELECT id, compte as cuid "
                 . "FROM domaines d "
                 . "WHERE d.domaine = '" . addslashes($field) . "'";
 
@@ -130,7 +130,10 @@ class Alternc_Tools_Mailbox_Import {
         if (count($result)) {
             $record = current($result);
             $domain_id = $record["id"];
-	    $cuid=$record["compte"];
+            if( $assign_cuid ){
+                global $cuid;
+                $cuid = $record["cuid"];
+            }
         }
 
         return $domain_id;
@@ -346,16 +349,21 @@ class Alternc_Tools_Mailbox_Import {
 
             $email = $mailboxData["email"];
             try {
+                    global $cuid;
                 // Login not exists : error
                 if ( ! $ignore_login && ! $this->checkLoginExists($mailboxData) ) {
                     throw new Exception("Login does not exist: " . $mailboxData["login"] . " for $email ");
                 }
+                    var_dump("assign $assign_cuid cuid $cuid");
 
                 // Domain not exists : error 
-                if ( !( $domain_id = $this->checkDomainExists($mailboxData) )) {
+                $assign_cuid = $ignore_login ? true : false;
+                if ( !( $domain_id = $this->checkDomainExists($mailboxData , $assign_cuid ) )) {
                     throw new Exception("Domain does not exist: " . $mailboxData["domain"] . " for $email ");
                 }
 
+                    var_dump("assign $assign_cuid cuid $cuid");
+                    continue;
                 // Mail not exists : error
                 if ($this->checkMailExists($mailboxData)) {
                     throw new Exception("Address $email already exists.");
