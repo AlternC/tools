@@ -56,6 +56,9 @@ class Alternc_Tools_Mailbox_Import {
         } else {
             throw new \Exception("Missing parameter db");
         }
+
+
+        $this->mail = new m_mail();
     }
 
     /**
@@ -78,10 +81,10 @@ class Alternc_Tools_Mailbox_Import {
 
         $result = current($this->query($query));
         // Attempts to retrieve path
-        if (isset($$result["path"]) && $result["path"]) {
-            $new_path = $$result["path"];
+        if (isset($result["path"]) && $result["path"]) {
+            $new_path = $result["path"];
         } else {
-            throw new \Exception("Missing parameter path in new email " . $mailboxData["email"]);
+            return array();
         }
 
         // Attempts to retrieve path
@@ -109,46 +112,60 @@ class Alternc_Tools_Mailbox_Import {
      * Checks if domain already in DB. 
      * 
      * @param array $mailboxData
-     * @return boolean
+     * @return integer
      */
-    function checkDomainExists($mailboxData) {
+    function checkDomainExists($mailboxData, $assign_cuid = false ) {
 
+      global $cuid;
         $field = $mailboxData["domaine"];
-        $success = false;
+        $domain_id = 0;
 
         // Build query
-        $query = "SELECT domaine "
+        $query = "SELECT id, compte as cuid "
                 . "FROM domaines d "
                 . "WHERE d.domaine = '" . addslashes($field) . "'";
 
         // No record ? Exit
-        if (count($this->query($query))) {
-            $success = true;
+        $result = $this->query($query);
+        if (count($result)) {
+            $record = current($result);
+            $domain_id = $record["id"];
+            if( $assign_cuid ){
+                global $cuid;
+                $cuid = $record["cuid"];
+            }
         }
-        return $success;
+
+        return $domain_id;
     }
 
     /**
      * Checks if login already in DB. 
      * 
      * @param array $mailboxData
-     * @return boolean
+     * @return boolean|integer
      */
     function checkLoginExists($mailboxData) {
 
+        global $cuid;
+        global $get_quota_cache;
         $field = $mailboxData["login"];
         $success = false;
 
         // Build query
-        $query = "SELECT login "
+        $query = "SELECT uid "
                 . "FROM membres u "
                 . "WHERE u.login = '" . addslashes($field) . "'";
 
+
         // No record ? Exit
-        if (count($this->query($query))) {
+        $result = $this->query($query);
+        if (count($result)) {
+            $cuid = $result[0]["uid"];
+            $get_quota_cache[$cuid]["mail"] = array("u" => 0, "t" => 1);
             $success = true;
         }
-        return $success;
+        return $cuid;
     }
 
     /**
@@ -186,10 +203,11 @@ class Alternc_Tools_Mailbox_Import {
      * @return int mail_id
      * @throws Exception
      */
-    function createMail($mailboxData) {
+    function createMail($mailboxData, $domain_id) {
 
         global $err;
 
+        $address = $mailboxData["address"];
         $email = $mailboxData["email"];
 
         // Will create a real mailbox if path exists
@@ -198,20 +216,40 @@ class Alternc_Tools_Mailbox_Import {
         // Will add recipients if recipients provided
         $recipients = $mailboxData["recipients"];
 
-        // Create the mail
-        $mail_id = $this->mail->create($mailboxData["dom_id"], $mailboxData["address"]);
-        if (!$mail_id) {
-            throw new Exception("Failed to create mailbox for $email : " . $err->errstr());
+        // Will ONLY create a catchall if the left part of the email is null
+        preg_match("/(.*)@(.*)/", $email, $matches);
+        if (count($matches) && isset($matches[1]) && $matches[1] == "") {
+
+            // Alternc Catchall means single recipient
+            if (!$recipients) {
+                throw new Exception("Failed to create catchall for $email : single alias expected, '$recipients' found");
+            }
+            $target = current(explode("\n", preg_replace('/[\r\t\s]/', "\n", $recipients)));
+            $this->mail->catchall_set($domain_id, $target);
+            return array("code" => 0, "message" => "ok");
         }
 
-        // Set password
-        if (!$this->mail->set_passwd($mail_id, $mailboxData["password"])) {
-            throw new Exception("Failed to set password for $email : " . $err->errstr());
+        // Create the mail
+        $mail_id = $this->mail->create($domain_id, $address, "", true);
+        if (!$mail_id) {
+            throw new Exception("Failed to create mailbox for $email : " . $err->errstr());
         }
 
         // Set details 
         if (!$this->mail->set_details($mail_id, ($path ? true : false), $this->default_quota, $recipients)) {
             throw new Exception("failed to set details for $email : " . $err->errstr());
+        }
+
+        // Create path
+        if ($path && !is_dir($path) && !mkdir($path, 0770, true)) {
+            throw new Exception("Failed to create mailbox for $email in $path ");
+        }
+
+        // Set password
+        if ($mailboxData["password"] ) {
+            $password = $mailboxData["password"];
+            $query = "UPDATE address SET `password`='$password' where address='$address' and domain_id=$domain_id";
+            $this->query($query);
         }
 
         return array("code" => 0, "message" => "ok", "mail_id" => $mail_id);
@@ -292,6 +330,13 @@ class Alternc_Tools_Mailbox_Import {
         // Retrieves command line options 
         $options = $commandLineResult->options;
 
+        // Attempts to retrieve ignore_login
+        if (isset($options["ignore_login"]) && $options["ignore_login"]) {
+            $ignore_login = true;
+        } else {
+            $ignore_login = false;
+        }
+
         // Retrieve export data
         $exportList = $this->getExportData($options);
 
@@ -304,42 +349,44 @@ class Alternc_Tools_Mailbox_Import {
 
             $email = $mailboxData["email"];
             try {
-
+                    global $cuid;
                 // Login not exists : error
-                if (!$this->checkLoginExists($mailboxData)) {
+                if ( ! $ignore_login && ! $this->checkLoginExists($mailboxData) ) {
                     throw new Exception("Login does not exist: " . $mailboxData["login"] . " for $email ");
                 }
+                    var_dump("assign $assign_cuid cuid $cuid");
 
                 // Domain not exists : error 
-                if (!$this->checkDomainExists($mailboxData)) {
+                $assign_cuid = $ignore_login ? true : false;
+                if ( !( $domain_id = $this->checkDomainExists($mailboxData , $assign_cuid ) )) {
                     throw new Exception("Domain does not exist: " . $mailboxData["domain"] . " for $email ");
                 }
 
+                    var_dump("assign $assign_cuid cuid $cuid");
+                    continue;
                 // Mail not exists : error
                 if ($this->checkMailExists($mailboxData)) {
                     throw new Exception("Address $email already exists.");
                 }
 
                 // Create mail
-                $creationResult = $this->createMail($mailboxData);
+                $creationResult = $this->createMail($mailboxData, $domain_id);
 
                 // Failed to create? 
                 if (!isset($creationResult["code"]) || $creationResult["code"] != 0) {
                     throw new Exception("Email creation error: " . $creationResult["message"] . " for $email ");
                 }
-
-                // Attempts to retrieve mail_id
-                if (isset($creationResult["mail_id"]) && $creationResult["mail_id"]) {
-                    $mail_id = $creationResult["mail_id"];
-                } else {
-                    throw new Exception("Missing parameter mail_id");
-                }
-
-                // Add to export for rsync
-                $rsyncExport[] = $this->buildRsyncExportSet($mail_id, $mailboxData);
-
+                
                 // Record success
                 $successList[] = $email;
+
+                // Attempts to retrieve mail_id for rsync
+                if (isset($creationResult["mail_id"]) && $creationResult["mail_id"]) {
+                    $mail_id = $creationResult["mail_id"];
+                    // Add to export for rsync
+                    $rsyncExport[] = $this->buildRsyncExportSet($mail_id, $mailboxData);
+                } 
+
 
                 // Record errors
             } catch (\Exception $e) {
@@ -374,9 +421,11 @@ class Alternc_Tools_Mailbox_Import {
         if (mysql_errno()) {
             throw new Exception("Mysql request failed. Errno #" . mysql_errno() . ": " . mysql_error());
         }
-
-        // Build list
         $recordList = array();
+        if( ! is_resource($connection) ){
+            return $recordList;
+        }
+        // Build list
         while ($result = mysql_fetch_assoc($connection)) {
             $recordList[] = $result;
         }
@@ -398,14 +447,14 @@ class Alternc_Tools_Mailbox_Import {
 
         // Retrieves options
         $options = $commandLineResult->options;
-        
+
         // Attempts to retrieve log_file
-        if (isset($options["log_file"]) && $options["log_file"]) {
-            $log_file = $options["log_file"];
+        if (isset($options["rsync_log"]) && $options["rsync_log"]) {
+            $log_file = $options["rsync_log"];
         } else {
-            throw new \Exception("Missing parameter log_file");
+            throw new \Exception("Missing parameter rsync_log");
         }
-        
+
         // Retrieve arguments
         $argumentsList = $commandLineResult->args;
 
@@ -417,14 +466,14 @@ class Alternc_Tools_Mailbox_Import {
         }
 
         // Attempts to retrieve target
-        if (isset($options["target"]) && $argumentsList["target"]) {
-            $target = $options["target"];
+        if (isset($argumentsList["target"]) && $argumentsList["target"]) {
+            $target = $argumentsList["target"];
         } else {
             throw new \Exception("Missing parameter target");
         }
 
         // Loop through [new,old] sets
-        foreach ($exportData as $set) {
+        foreach ($exportList as $set) {
 
             $errorList = array();
 
@@ -449,17 +498,39 @@ class Alternc_Tools_Mailbox_Import {
                     throw new \Exception("Missing parameter old_path");
                 }
 
+                $localArray = array("local", "localhost", "here", "127.0.0.1");
+                if (in_array($source, $localArray)) {
+                    $src = escapeshellarg("$old_path");
+                    $directory = $old_path;
+                } else {
+                    $src = escapeshellarg("$source:$old_path");
+                }
+                if (in_array($target, $localArray)) {
+                    $dest = escapeshellarg("$new_path");
+                    $directory = $new_path;
+                } else {
+                    $dest = escapeshellarg("$target:$new_path");
+                }
+
+                // Check if mailbox dir exists
+                if (!is_dir($directory) && !mkdir($directory, 0770, true)) {
+                    throw new Exception("Rsync failed for $email: Missing directory $directory");
+                }
+                // Check if mailbox dir is writabla
+                if (!is_writeable($directory)) {
+                    throw new Exception("Rsync failed for $email: Cannot write in directory $directory");
+                }
+
                 // Build the RSYNC command, note we don't keep owner and group
-                $command = "rsync -rlpt " . escapeshellarg("$source:$old_path") . " " . escapeshellarg("$target:$new_path >> ".  escapeshellarg($log_file));
-                
+                $command = "rsync -rlpt $src $dest >> " . escapeshellarg($log_file);
+
                 // Run the Rsync command
                 $code = 1;
                 $output = array();
-                exec( $command, $output, $code);
-                if( $code != 0 ){
-                    throw new Exception("Rsync failed for $email : code#${code}, output : ".  json_encode($output));
+                exec($command, $output, $code);
+                if ($code != 0) {
+                    throw new Exception("Rsync failed for $email : code#${code}, output : " . json_encode($output));
                 }
-                
             } catch (Exception $exc) {
                 $errorList[] = $exc->getTraceAsString();
             }
