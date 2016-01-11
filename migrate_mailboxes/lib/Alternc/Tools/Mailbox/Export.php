@@ -42,11 +42,11 @@ class Alternc_Tools_Mailbox_Export {
 
         $includeMailList = $this->getIncludeMailList($options);
         if (count($includeMailList)) {
-//            $includeMailList = array_unique($includeMailList);
+            $includeMailList = array_unique($includeMailList);
         }
         $excludeMailList = $this->getExcludeMailList($options);
         if (count($excludeMailList)) {
-//            $excludeMailList = array_unique($excludeMailList);
+            $excludeMailList = array_unique($excludeMailList);
         }
 
         // Addresses that are included AND excluded will be excluded (filter out by default)
@@ -116,17 +116,19 @@ class Alternc_Tools_Mailbox_Export {
     function getExcludeMailList($options) {
 
         $resultArray = array();
+        foreach ($options as $filter => $value) {
 
-        switch ($options) {
-            case "exclude_mails":
-                $tmpArray = $this->getListFromFile($options["exclude_mails"]);
-                $resultArray = array_merge($resultArray, $tmpArray);
-                break;
-            case "exclude_domains":
-                $tmpArray = $this->getListFromFile($options["exclude_domains"]);
-                $tmpArray = $this->fetchAddressListFromDb("d.domaine IN ('" . implode("','", $tmpArray) . "')");
-                $resultArray = array_merge($resultArray, $tmpArray);
-                break;
+            switch ($filter) {
+                case "exclude_mails":
+                    $tmpArray = $this->getListFromFile($value);
+                    $resultArray = array_merge($resultArray, $tmpArray);
+                    break;
+                case "exclude_domains":
+                    $tmpArray = $this->getListFromFile($value);
+                    $tmpArray = $this->fetchAddressListFromDb("d.domaine IN ('" . implode("','", $tmpArray) . "')");
+                    $resultArray = array_merge($resultArray, $tmpArray);
+                    break;
+            }
         }
         return $resultArray;
     }
@@ -146,12 +148,7 @@ class Alternc_Tools_Mailbox_Export {
         $fileContent = file($filename);
 
         foreach ($fileContent as $line) {
-            preg_match_all("/(\S*)/", $line, $matches);
-            if (count($matches)) {
-                foreach ($matches as $emailMatches) {
-                    $result[] = $emailMatches[1];
-                }
-            }
+            $result[] = trim($line);
         }
         return $result;
     }
@@ -179,7 +176,7 @@ class Alternc_Tools_Mailbox_Export {
 
         // Query
         global $db;
-        $connection = $db->query($query);
+        $db->query($query);
         if (mysql_errno()) {
             throw new Exception("Mysql request failed. Errno #" . mysql_errno() . ": " . mysql_error());
         }
@@ -226,7 +223,7 @@ class Alternc_Tools_Mailbox_Export {
 
         // Query
         global $db;
-        $connection = $db->query($query);
+        $db->query($query);
         if (mysql_errno()) {
             throw new Exception("Mysql request failed. Errno #" . mysql_errno() . ": " . mysql_error());
         }
@@ -297,7 +294,6 @@ class Alternc_Tools_Mailbox_Export {
 
     function checkOptionsConsistency(&$options) {
 
-
         // Clean
         foreach ($options as $key => $value) {
             if (null == $value) {
@@ -305,19 +301,19 @@ class Alternc_Tools_Mailbox_Export {
             }
         }
 
-        $params = $options;
-
-        // Exclude output
-        if (isset($params["output_file"])) {
-            unset($params["output_file"]);
-        }
-
-        // Do not allow more than one parameter if a "single"
-        if (isset($params["single_domain"]) || isset($params["single_account"])) {
-            if (count($params) > 1) {
-                throw new \Exception("You cannot use more than one option if a single option is selected.");
-            }
-        }
+//        $params = $options;
+//
+//        // Exclude output
+//        if (isset($params["output_file"])) {
+//            unset($paryou cannoams["output_file"]);
+//        }
+//
+//        // Do not allow more than one parameter if a "single"
+//        if (isset($params["single_domain"]) || isset($params["single_account"])) {
+//            if (count($params) > 1) {
+//                throw new \Exception("You cannot use more than one option if a single option is selected.");
+//            }
+//        }
     }
 
     /**
