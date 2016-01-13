@@ -43,10 +43,6 @@ $consoleParser->addArgument("source", array(
     "help_name" => "source.server.fqdn",
     "description" => "Origin/Source server, IP or FQDN",
 ));
-$consoleParser->addArgument("target", array(
-    "help_name" => "target.server.fqdn",
-    "description" => "Destination/Target server, IP or FQDN",
-));
 
 // Run the command line parser
 try {

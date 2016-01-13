@@ -354,7 +354,6 @@ class Alternc_Tools_Mailbox_Import {
                 if ( ! $ignore_login && ! $this->checkLoginExists($mailboxData) ) {
                     throw new Exception("Login does not exist: " . $mailboxData["login"] . " for $email ");
                 }
-                    var_dump("assign $assign_cuid cuid $cuid");
 
                 // Domain not exists : error 
                 $assign_cuid = $ignore_login ? true : false;
@@ -362,8 +361,6 @@ class Alternc_Tools_Mailbox_Import {
                     throw new Exception("Domain does not exist: " . $mailboxData["domain"] . " for $email ");
                 }
 
-                    var_dump("assign $assign_cuid cuid $cuid");
-                    continue;
                 // Mail not exists : error
                 if ($this->checkMailExists($mailboxData)) {
                     throw new Exception("Address $email already exists.");
@@ -465,13 +462,6 @@ class Alternc_Tools_Mailbox_Import {
             throw new \Exception("Missing parameter source");
         }
 
-        // Attempts to retrieve target
-        if (isset($argumentsList["target"]) && $argumentsList["target"]) {
-            $target = $argumentsList["target"];
-        } else {
-            throw new \Exception("Missing parameter target");
-        }
-
         // Loop through [new,old] sets
         foreach ($exportList as $set) {
 
@@ -497,20 +487,8 @@ class Alternc_Tools_Mailbox_Import {
                 } else {
                     throw new \Exception("Missing parameter old_path");
                 }
-
-                $localArray = array("local", "localhost", "here", "127.0.0.1");
-                if (in_array($source, $localArray)) {
-                    $src = escapeshellarg("$old_path");
-                    $directory = $old_path;
-                } else {
-                    $src = escapeshellarg("$source:$old_path");
-                }
-                if (in_array($target, $localArray)) {
-                    $dest = escapeshellarg("$new_path");
-                    $directory = $new_path;
-                } else {
-                    $dest = escapeshellarg("$target:$new_path");
-                }
+		$src = "$source:$old_path";
+		$directory = $new_path;
 
                 // Check if mailbox dir exists
                 if (!is_dir($directory) && !mkdir($directory, 0770, true)) {
@@ -522,8 +500,9 @@ class Alternc_Tools_Mailbox_Import {
                 }
 
                 // Build the RSYNC command, note we don't keep owner and group
-                $command = "rsync -rlpt $src $dest >> " . escapeshellarg($log_file);
+                $command = "rsync -rlPt ".escapeshellarg($src."/")." ".escapeshellarg($directory."/")." >> " . escapeshellarg($log_file);
 
+echo "$command\n";
                 // Run the Rsync command
                 $code = 1;
                 $output = array();
