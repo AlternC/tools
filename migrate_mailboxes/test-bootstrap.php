@@ -138,7 +138,7 @@ foreach ($mysqlConfigFile as $line) {
 */
 class DB_system extends DB_Sql { 
   function __construct($database, $user, $password) { 
-    parent::__construct($database, '127.0.0.1', $user, $password);
+    parent::connect($database, '127.0.0.1', $user, $password);
   } 
 } 
 

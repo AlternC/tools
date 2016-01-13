@@ -184,7 +184,7 @@ class Alternc_Tools_Mailbox_Export {
         // Build list
         $recordList = array();
         while ($db->next_record()) {
-            $record = $db->current_record();
+            $record = $db->Record;
             $recordList[] = $record["email"];
         }
 
@@ -231,7 +231,7 @@ class Alternc_Tools_Mailbox_Export {
         // Build list
         $recordList = array();
         while ($db->next_record()) {
-            $record = $db->current_record();
+            $record = $db->Record;
             $recordList[$record["email"]] = $record;
         }
 
@@ -277,7 +277,6 @@ class Alternc_Tools_Mailbox_Export {
             }
         }
         if (!count($updateIdList)) {
-
             return array("code" => 0, "message" => "Nothing to do");
         }
         $query_update = "UPDATE address 
@@ -348,5 +347,6 @@ class Alternc_Tools_Mailbox_Export {
         // Exit
         return array("code" => 0, "message" => "Wrote export content to $output_file");
     }
+
 
 }

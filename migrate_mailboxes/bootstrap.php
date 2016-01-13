@@ -5,7 +5,7 @@ set_include_path(implode(PATH_SEPARATOR, $pathList));
 require_once('AutoLoader.php');
 
 if (getenv("TEST")) {
-
+    echo "\n [ Running in test environment ] \n\n";
     require_once 'test-bootstrap.php';
 } else {
     // Alternc bootstrap
