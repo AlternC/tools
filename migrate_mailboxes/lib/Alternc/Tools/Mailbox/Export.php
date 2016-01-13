@@ -241,8 +241,14 @@ class Alternc_Tools_Mailbox_Export {
 
     function fixDb($commandLineResult) {
 
+        // Retrieves command line options 
+        $options = $commandLineResult->options;
+
+        // Checks command line consistency
+        $this->checkOptionsConsistency($options);
+
         // Retrieve addresses list
-        $exportList = $this->getAdressList($options);
+        $exportList = $this->getFinalAdressList($options);
 
         // Build query
         $query = '
@@ -283,10 +289,10 @@ class Alternc_Tools_Mailbox_Export {
 	    SET type = 'mailman'
 	    WHERE id in (" . implode(",", $updateIdList) . ")";
 
-        $connection = mysql_query($query_update);
-        if (mysql_errno()) {
-            throw new Exception("Mysql request failed. Errno #" . mysql_errno() . ": " . mysql_error());
-        }
+        
+        echo ("\nExecuting SQL Command:\n$query_update");
+            
+        $db->query( $query_update );
         // Exit
         return array("code" => 0, "message" => "Changed type for address list: " . implode(",", $updateIdList));
     }
@@ -300,19 +306,6 @@ class Alternc_Tools_Mailbox_Export {
             }
         }
 
-//        $params = $options;
-//
-//        // Exclude output
-//        if (isset($params["output_file"])) {
-//            unset($paryou cannoams["output_file"]);
-//        }
-//
-//        // Do not allow more than one parameter if a "single"
-//        if (isset($params["single_domain"]) || isset($params["single_account"])) {
-//            if (count($params) > 1) {
-//                throw new \Exception("You cannot use more than one option if a single option is selected.");
-//            }
-//        }
     }
 
     /**

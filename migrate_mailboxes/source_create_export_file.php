@@ -44,7 +44,6 @@ $consoleParser->addOption("single_account", array(
     "description" => "A single account name (i.e. AlternC login) to export\n"
 ));
 
-
 $consoleParser->addOption("exclude_mails", array(
     "help_name" => "/tmp/mailboxes.txt",
     "long_name" => "--exclude-mails",

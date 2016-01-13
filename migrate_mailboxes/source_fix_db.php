@@ -20,6 +20,44 @@ $consoleParser = new Console_CommandLine(array(
     "description" => "Exports Alternc mailboxes to a file for export."
 ));
 
+$consoleParser->addOption("single_domain", array(
+    "help_name" => "domain.com",
+    "short_name" => "-d",
+    "long_name" => "--single-domain",
+    "description" => "A single domain to export"
+));
+
+$consoleParser->addOption("single_account", array(
+    "help_name" => "foobar",
+    "short_name" => "-a",
+    "long_name" => "--single-account",
+    "description" => "A single account name (i.e. AlternC login) to export\n"
+));
+
+$consoleParser->addOption("exclude_mails", array(
+    "help_name" => "/tmp/mailboxes.txt",
+    "long_name" => "--exclude-mails",
+    "description" => "Path of a file containing mailboxes to exclude, separated by breaklines"
+));
+
+$consoleParser->addOption("include_mails", array(
+    "help_name" => "/tmp/mailboxes.txt",
+    "long_name" => "--include-mails",
+    "description" => "Path of a file containing mailboxes to include, separated by breaklines"
+));
+
+$consoleParser->addOption("exclude_domain", array(
+    "help_name" => "/tmp/domain.txt",
+    "long_name" => "--exclude-domains",
+    "description" => "Path of a file containing domains to include, separated by breaklines"
+));
+
+$consoleParser->addOption("include_domains", array(
+    "help_name" => "/tmp/domain.txt",
+    "long_name" => "--include-domains",
+    "description" => "Path of a file containing domains to exclude, separated by breaklines"
+));
+
 // Configure command line parser
 $consoleParser->add_version_option = false;
 
