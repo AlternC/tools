@@ -25,9 +25,9 @@ source_create_export_file.php [options]
 
 ## On target (i.e. the server hosting the domains starting from now)
 
-    Use target_create_domains.php
+* Use `target_create_domains.php`, this will use the json export file
 
-    This will use the json export file
+```
     Usage:
       target_create_domains.php [options]
 
@@ -41,5 +41,5 @@ source_create_export_file.php [options]
                                                              owner
       -h, --help                                             show this help
                                                              message and exit
-
+``
 
