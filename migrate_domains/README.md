@@ -1,18 +1,17 @@
-== Migrate domains
+# Migrate domains
 
 These scripts are intended to allow migration from an alternc instance to another
 
 It's a two step process
 
-# On source i.e. the server actually hosting the domains
+## On source (i.e. the server actually hosting the domains)
 
+* Use `source_create_export_file.php`, this will create a json export file for you
 
-    Use source_create_export_file.php
+Usage:
 
-    This will create a json export file for you
-
-    Usage:
-      source_create_export_file.php [options]
+```
+source_create_export_file.php [options]
 
     Options:
     -o /tmp/out.json, --output-file=/tmp/out.json    Export file name and
@@ -22,8 +21,9 @@ It's a two step process
                                                      exclude
     -h, --help                                       show this help message
                                                      and exit
+```
 
-# On target i.e. the server hosting the domains starting from now
+## On target (i.e. the server hosting the domains starting from now)
 
     Use target_create_domains.php
 
