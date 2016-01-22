@@ -33,30 +33,70 @@ git clone https://github.com/AlternC/alternc-tools.git
  - You will need the rsync command for the last step
  - The sync / last step can be repeated over time
 
-How to use
-----------
+## How to use
 
-*First, you work on the SOURCE (i.e. the AlternC server where the emails are currently served).*
 
- 1. **Use source_fix_db.php ** *(optional)*
+### on the SOURCE 
+(i.e. the AlternC server where the emails are currently served).
+
+* **Use `source_fix_db.php`** *(optional)*
 It might only be useful on old AlternC databases. 
 It eventually fixes misformed mailman addresses in database, for a clean state.    
 
- 1. **Use source_create_export_file.php  **
+* **Use source_create_export_file.php  **
 This important step creates a mailbox export file which contains informations such as address, domain, etc.
 Check the filters provided on the command line to include / exclude domains / addresses.
 
-*Next, you work on TARGET the AlternC server where the emails should next be served*
+```
+Usage:
+  ./source_create_export_file.php [options]
 
- 1. **Transfer the Export JSON file**
+Options:
+  -o /tmp/out.json, --output-file=/tmp/out.json  Export file name and path
+  -d domain.com, --single-domain=domain.com      A single domain to export
+  -a foobar, --single-account=foobar             A single account name (i.e. AlternC login) to export
+  
+  --exclude-mails=/tmp/mailboxes.txt             Path of a file containing mailboxes to exclude, separated by breaklines
+  --include-mails=/tmp/mailboxes.txt             Path of a file containing mailboxes to include, separated by breaklines
+  --exclude-domains=/tmp/domain.txt              Path of a file containing domains to include, separated by breaklines
+  --include-domains=/tmp/domain.txt              Path of a file containing domains to exclude, separated by breaklines
+  
+  -h, --help                                     show this help message and exit
+```
+
+### on TARGET 
+(the AlternC server where the emails should next be served)
+
+* **Transfer the Export JSON file**
  This file is by default in the SOURCE /tmp folder (see below for default location).
  Copy it over SSH to your TARGET at the same default location. 
- 
- 1. **target_create_mailboxes.php ** 
+
+*  `target_create_mailboxes.php`
+
 On *TARGET* server. Uses the mailbox export file to populate the database with the new emails. Creates a source->target per mailbox file.  
 
- 1. **target_sync_mailboxes.php**
+```
+  ./target_create_mailboxes.php [options]
+
+Options:
+  --ignore-login=true                            Ignore the email's source AlternC login and use the new domain owner
+  -i /tmp/out.json, --input-file=/tmp/out.json   Input file name and path
+  -o /tmp/out.json, --output-file=/tmp/out.json  Export file name and path
+  -h, --help                                     show this help message and exit
+```
+
+* `target_sync_mailboxes.php`
+
 On *TARGET* server. Uses the source->target per mailbox file to run rsync between the two hosts.
+
+```
+  ./target_sync_mailboxes.php [options] source.server.fqdn
+
+Options:
+  -i /tmp/rsyncData.json, --input-file=/tmp/rsyncData.json  Input file name and path
+  -l /tmp/rsyncLog.json, --rsync-log=/tmp/rsyncLog.json     Rsync log files
+  -h, --help                                                show this help message and exit
+```
 
 
 Export files and logs
