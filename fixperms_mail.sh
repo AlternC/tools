@@ -48,7 +48,7 @@ then
     exit 1    
 fi
 
-PATH_MAIL=`cat /etc/alternc/local.sh |grep "^ALTERNC_MAIL"|cut -d "\"" -f2`
+PATH_MAIL=`cat $alternc_conf |grep "^ALTERNC_MAIL"|cut -d "\"" -f2`
 if [ -z $PATH_MAIL ]
 then 
     echo -e "Error: Failed to find path mail"
