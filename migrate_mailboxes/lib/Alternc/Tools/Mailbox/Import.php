@@ -414,17 +414,14 @@ class Alternc_Tools_Mailbox_Import {
     function query($query = null) {
 
         // Query
-        $connection = mysql_query($query);
-        if (mysql_errno()) {
-            throw new Exception("Mysql request failed. Errno #" . mysql_errno() . ": " . mysql_error());
+	$query_state = $this->db->query($query);
+        if ( ! $query_state ) {
+            throw new Exception("Mysql request failed. Errno #" . mysql_errno() . ": " . mysql_error(). " query: $query");
         }
         $recordList = array();
-        if( ! is_resource($connection) ){
-            return $recordList;
-        }
         // Build list
-        while ($result = mysql_fetch_assoc($connection)) {
-            $recordList[] = $result;
+        while ($this->db->next_record() ){
+            $recordList[] = $this->db->current_record();
         }
 
         // Exit
@@ -514,6 +511,7 @@ echo "$command\n";
                 $errorList[] = $exc->getTraceAsString();
             }
         }
+        return array("code" => 0, "message" => "ok");
     }
 
     /**
