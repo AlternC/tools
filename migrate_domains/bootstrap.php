@@ -1,7 +1,12 @@
 <?php
 
 // Alternc bootstrap
-require_once("/usr/share/alternc/panel/class/config_nochk.php");
+include("/usr/share/alternc/panel/class/config_nochk.php");
+
+if (!isset($db)) {
+    echo "\n\nCan't load AlternC, please check you are on an alternc-enabled server\n\n";
+    exit();
+}
 
 define("APP_PATH",__DIR__);
 chdir( APP_PATH );

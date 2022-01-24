@@ -28,11 +28,26 @@ $consoleParser->addOption("output_file", array(
     "description" => "Export file name and path",
     'default'     => $service->default_output 
 ));
+
 $consoleParser->addOption("exclude_domain", array(
-    "help_name" => "/tmp/domains.txt",
+    "help_name" => "/tmp/excluded-domains.txt",
     "short_name" => "-e",
     "long_name" => "--exclude",
     "description" => "Path of a file containing domains to exclude"
+));
+
+$consoleParser->addOption("include_domain", array(
+    "help_name" => "/tmp/domains.txt",
+    "short_name" => "-i",
+    "long_name" => "--include",
+    "description" => "Path of a file containing domains to include"
+));
+
+$consoleParser->addOption("include_accounts", array(
+    "help_name" => "/tmp/accounts.txt",
+    "short_name" => "-a",
+    "long_name" => "--accounts",
+    "description" => "Path of a file containing AlternC Accounts' whose domains will be included (not the other accounts)"
 ));
 
 // Run the command line parser

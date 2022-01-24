@@ -19,6 +19,12 @@ source_create_export_file.php [options]
     -e /tmp/domains.txt, --exclude=/tmp/domains.txt  Path of a file
                                                      containing domains to
                                                      exclude
+    -i /tmp/domains.txt, --include=/tmp/domains.txt  Path of a file
+                                                     containing domains to
+                                                     include
+    -a /tmp/acct.txt, --accounts=/tmp/accts.txt      Path of a file
+                                                     containing AlternC accounts
+                                                     to include
     -h, --help                                       show this help message
                                                      and exit
 ```

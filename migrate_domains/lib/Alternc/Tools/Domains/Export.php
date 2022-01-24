@@ -46,35 +46,68 @@ class Alternc_Tools_Domains_Export {
         if( count( $excludeDomainList )){
             $exclude_query = "AND d.domaine NOT IN ('".implode("','", $excludeDomainList)."') ";
         }
+
+        $include_query = "";
+        $includeDomainList = $this->getIncludeDomainList( $options );
+        if( count( $includeDomainList )){
+            $include_query = "AND d.domaine IN ('".implode("','", $includeDomainList)."') ";
+        }
+
+        $include_accounts = "";
+        $includeAccountsIdList = $this->getIncludeAccountsIdList( $options );
+        if( count( $includeAccountsIdList )){
+            $include_accounts = "AND d.compte IN ('".implode("','", $includeAccountsIdList)."') ";
+        }
         
         // Build query
         $query = "SELECT c.login, d.* "
                 . "FROM domaines d "
                 . "JOIN membres c ON d.compte = c.uid "
                 . $exclude_query
+                . $include_query
+                . $include_accounts
                 . ";";
         
         // Query
-        $connection = mysql_query($query);
-        if(mysql_errno()){
-            throw new Exception("Mysql request failed. Errno #".  mysql_errno(). ": ".  mysql_error());
-        }
-        
+        $this->db->query($query);
+
         // Build list
         $recordList = array();
-        while ($record = mysql_fetch_assoc($connection)) {
-            $recordList[$record["domaine"]] = $record;
+        while ($this->db->next_record()) {
+            $recordList[$this->db->Record["domaine"]] = $this->array_to_hash($this->db->Record);
         }
         
         // Fetch subdomains for domain
         foreach( $recordList as $domain => $domainData ){
-            $domainData["sub_domains"] = $this->getSubdomains( $domain );
-            $recordList[$domain] = $domainData;
+            $recordList[$domain]["sub_domains"] = $this->getSubdomains( $domain );
+            $manualzone=$this->getManualZoneInfo($domain);
+            if ($manualzone) {
+                $recordList[$domain]["manual_zone"] = $manualzone;
+            }
         }
         
         // Exit
         return $recordList;
     }
+
+
+    public function getManualZoneInfo( $domain ) {
+        $zonefile = "/var/lib/alternc/bind/zones/".$domain;
+        if (!file_exists($zonefile)) {
+            return false;
+        }
+        $f=fopen($zonefile,"rb");
+        $manualzone="";
+        $inmanual=false;
+        while ($s=fgets($f,1024)) {
+            if ($inmanual) $manualzone.=$s;
+            if (preg_match("#;;; END ALTERNC AUTOGENERATE CONFIGURATION#",$s)) {
+                $inmanual=true;
+            }
+        }
+        return trim($manualzone);
+    }
+    
     
     /**
      * 
@@ -84,22 +117,17 @@ class Alternc_Tools_Domains_Export {
      */
     public function getSubdomains( $domain ){
         
-        $query = "SELECT s.* "
-                . "FROM domaines d "
-                . "JOIN sub_domaines s ON s.domaine = d.id "
-                . "WHERE s.domaine = '".$domain."'";
+        $query = "SELECT * "
+               . "FROM sub_domaines "
+               . "WHERE domaine = '".addslashes($domain)."'";
         // Query
-        $connection = mysql_query($query);
-        if(mysql_errno()){
-            throw new Exception("Mysql request failed. Errno #".  mysql_errno(). ": ".  mysql_error());
-        }
+        $this->db->query($query);
         
         // Build list
         $recordList = array();
-        while ($record = mysql_fetch_assoc($connection)) {
-            $recordList[] = $record;
+        while ($this->db->next_record()) {
+            $recordList[] = $this->array_to_hash($this->db->Record);
         }
-        echo($domain."\n");
         return $recordList;
         
     }
@@ -133,6 +161,67 @@ class Alternc_Tools_Domains_Export {
         return $result;
         
     }
+
+    /**
+     * 
+     * @param array $options
+     * @return boolean|array
+     * @throws Exception
+     */
+    function getIncludeDomainList( $options ){
+
+        if( ! isset($options["include_domain"]) ){
+            return array();
+        }
+        $filename = $options["include_domain"];
+        if( ! $filename || ! is_file( $filename) || !is_readable($filename)){
+            throw new Exception("Failed to load file $filename");
+        }
+        $fileContent = file($filename);
+        
+        foreach ($fileContent as $line) {
+            preg_match_all("/\S+/", $line, $matches);
+            if( count($matches)){
+                foreach( $matches as $domainMatches){
+                    $result[] = $domainMatches[0];
+                }
+            }
+            
+        }
+        return $result;
+    }
+
+    /**
+     * 
+     * @param array $options
+     * @return boolean|array
+     * @throws Exception
+     */
+    function getIncludeAccountsIdList( $options ){
+
+        if( ! isset($options["include_accounts"]) ){
+            return array();
+        }
+        $filename = $options["include_accounts"];
+        if( ! $filename || ! is_file( $filename) || !is_readable($filename)){
+            throw new Exception("Failed to load file $filename");
+        }
+        $fileContent = file($filename);
+        
+        foreach ($fileContent as $line) {
+            preg_match_all("/\S+/", $line, $matches);
+            if( count($matches)){
+                foreach( $matches as $domainMatches){
+                    $this->db->query("SELECT uid FROM membres WHERE login='".addslashes($domainMatches[0])."';");
+                    if ($this->db->next_record()) {
+                        $result[] = $this->db->Record["uid"];
+                    }
+                }
+            }
+            
+        }
+        return $result;
+    }
     
     /**
      * 
@@ -162,6 +251,16 @@ class Alternc_Tools_Domains_Export {
         
         // Exit
         return array("code" => 0, "message" => "Wrote export content to $output_file");
+    }
+
+
+    function array_to_hash($array) {
+        $res=[];
+        foreach($array as $k=>$v) {
+            if ($k=="0" || intval($k)!=0) continue;
+            $res[$k]=$v;
+        }
+        return $res;
     }
 
 }
